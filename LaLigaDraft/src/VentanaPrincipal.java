@@ -9,14 +9,14 @@ public class VentanaPrincipal extends JFrame {
 
     public VentanaPrincipal() {
         setTitle("Liga Fantasy");
-        setSize(400, 700);
+        setSize(400, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setResizable(false);
 
         // Panel inferior (barra de navegación)
         JPanel panelMenu = new JPanel(new GridLayout(1, 5));
-        String[] secciones = {"Mis Ligas", "Clasificación", "Equipo", "Mercado", "Actividad"};
+        String[] secciones = {"Mis Ligas", "Clasificacion", "Equipo", "Mercado", "Actividad"};
 
         // Panel central con CardLayout
         cardLayout = new CardLayout();
@@ -24,9 +24,10 @@ public class VentanaPrincipal extends JFrame {
 
         // Crear secciones
         for (String s : secciones) {
-            if (!s.equals("Equipo")) {
+            if (!s.equals("Equipo") && !s.equals("Clasificacion")) {
                 panelContenido.add(crearPanel(s), s);
             }
+            
         }
 
         // Panel "Equipo" con PanelEquipo y botones de formaciones
@@ -35,6 +36,12 @@ public class VentanaPrincipal extends JFrame {
         panelContenedorEquipo.add(panelEquipo, BorderLayout.CENTER);
 
         panelContenido.add(panelContenedorEquipo, "Equipo");
+        
+        PanelClasificacion panelClasificacion = new PanelClasificacion();
+        JPanel panelContenedorClasificacion = new JPanel(new BorderLayout());
+        panelContenedorClasificacion.add(panelClasificacion, BorderLayout.CENTER);
+        
+        panelContenido.add(panelContenedorClasificacion, "Clasificacion");
 
         // Crear botones de navegación
         for (String s : secciones) {
@@ -61,12 +68,5 @@ public class VentanaPrincipal extends JFrame {
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(new JLabel("Sección: " + texto, SwingConstants.CENTER), BorderLayout.CENTER);
         return panel;
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            VentanaPrincipal ventana = new VentanaPrincipal();
-            ventana.setVisible(true);
-        });
     }
 }

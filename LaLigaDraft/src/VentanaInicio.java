@@ -31,8 +31,8 @@ public class VentanaInicio extends JFrame {
 
         // Panel para los botones
         JPanel panelBotones = new JPanel();
-        panelBotones.setLayout(new GridLayout(2, 1, 20, 20));
-        panelBotones.setBorder(BorderFactory.createEmptyBorder(50, 100, 50, 100));
+        panelBotones.setLayout(new GridLayout(1, 2, 20, 20));
+        panelBotones.setBorder(BorderFactory.createEmptyBorder(325, 50, 100, 50));
 
         JButton botonIniciarSesion = new JButton("Iniciar Sesión");
         JButton botonRegistrarme = new JButton("Registrarme");
@@ -44,21 +44,30 @@ public class VentanaInicio extends JFrame {
 
         // Acciones de botones
         botonIniciarSesion.addActionListener((ActionEvent e) -> {
-            abrirVentanaPrincipal();
+            abrirVentanaIniciarSesion();
         });
 
         botonRegistrarme.addActionListener((ActionEvent e) -> {
-            abrirVentanaPrincipal();
+            abrirVentanaRegistro();
         });
 
         add(panelPrincipal);
     }
 	
-	// Método para abrir la VentanaPrincipal y cerrar esta
-    private void abrirVentanaPrincipal() {
+	// Método para abrir la VentanaRegistro y cerrar esta
+    private void abrirVentanaRegistro() {
         SwingUtilities.invokeLater(() -> {
-            VentanaPrincipal ventanaPrincipal = new VentanaPrincipal();
-            ventanaPrincipal.setVisible(true);
+            VentanaRegistro ventanaRegistro = new VentanaRegistro();
+            ventanaRegistro.setVisible(true);
+        });
+        dispose(); // Cierra la ventana de inicio
+    }
+    
+    // Método para abrir la VentanaIniciarSesion y cerrar esta
+    private void abrirVentanaIniciarSesion() {
+        SwingUtilities.invokeLater(() -> {
+            VentanaIniciarSesion ventanaI = new VentanaIniciarSesion();
+            ventanaI.setVisible(true);
         });
         dispose(); // Cierra la ventana de inicio
     }

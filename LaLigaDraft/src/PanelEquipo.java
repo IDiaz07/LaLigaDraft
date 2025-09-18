@@ -11,9 +11,9 @@ public class PanelEquipo extends JPanel {
 
     public PanelEquipo() {
         setLayout(new BorderLayout());
-        setBackground(Color.GRAY); // fondo gris alrededor
+        setBackground(Color.DARK_GRAY); // fondo gris alrededor
 
-        // Panel de campo más pequeño
+        // Panel de campo
         campo = new JPanel(null) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -40,7 +40,7 @@ public class PanelEquipo extends JPanel {
 
         // Crear jugadores
         for (int i = 0; i < 11; i++) {
-            JLabel jugador = new JLabel("⚽", SwingConstants.CENTER);
+            JLabel jugador = new JLabel("◻", SwingConstants.CENTER);
             jugador.setFont(new Font("Arial", Font.PLAIN, 24));
             jugador.setSize(40, 40);
             jugadores.add(jugador);
@@ -49,7 +49,7 @@ public class PanelEquipo extends JPanel {
 
         // Panel inferior para ComboBox (donde antes estaban los botones)
         JPanel panelInferior = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        panelInferior.setBackground(Color.GRAY);
+        panelInferior.setBackground(Color.DARK_GRAY);
         panelInferior.setPreferredSize(new Dimension(400, 50));
 
         // ComboBox para seleccionar formación
