@@ -1,129 +1,149 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 
 public class VentanaPrincipal extends JFrame {
 
     private CardLayout cardLayout;
     private JPanel panelContenido;
     private JLabel labelSaldo;
+    private JPanel panelSaldo; // este se verá solo en "Mercado"
     private int saldo = 500000; // saldo inicial ficticio
 
     public VentanaPrincipal() {
         setTitle("Liga Fantasy");
-        setSize(400, 700);
+        setSize(400, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setResizable(false);
 
-        // Panel superior con saldo
-        JPanel panelSuperior = new JPanel(new BorderLayout());
-        labelSaldo = new JLabel("Tu saldo: " + saldo + " €");
-        labelSaldo.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        labelSaldo.setHorizontalAlignment(SwingConstants.RIGHT);
-        panelSuperior.add(labelSaldo, BorderLayout.EAST);
-        panelSuperior.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-        // Panel inferior (barra de navegación)
-        JPanel panelMenu = new JPanel(new GridLayout(1, 5));
-        String[] secciones = {"Mis Ligas", "Clasificación", "Equipo", "Mercado", "Actividad"};
-
-        // Panel central con CardLayout
+        // ====== Panel central con CardLayout ======
         cardLayout = new CardLayout();
         panelContenido = new JPanel(cardLayout);
+        panelContenido.setBackground(new Color(18, 18, 18)); // fondo oscuro
+
+        String[] secciones = {"Mis Ligas", "Clasificacion", "Equipo", "Mercado", "Actividad"};
 
         // Crear secciones normales
         for (String s : secciones) {
-            if (!s.equals("Equipo") && !s.equals("Mercado")) {
+            if (!s.equals("Equipo") && !s.equals("Clasificacion") && !s.equals("Mercado")) {
                 panelContenido.add(crearPanel(s), s);
             }
         }
 
-        // Panel "Equipo"
-        PanelEquipo panelEquipo = new PanelEquipo();
-        JPanel panelContenedorEquipo = new JPanel(new BorderLayout());
-        panelContenedorEquipo.add(panelEquipo, BorderLayout.CENTER);
-        panelContenido.add(panelContenedorEquipo, "Equipo");
+        // Panel "Equipo" (sin cambios)
+        try {
+            PanelEquipo panelEquipo = new PanelEquipo();
+            JPanel panelContenedorEquipo = new JPanel(new BorderLayout());
+            panelContenedorEquipo.add(panelEquipo, BorderLayout.CENTER);
+            panelContenido.add(panelContenedorEquipo, "Equipo");
+        } catch (Throwable t) {
+            panelContenido.add(crearPanel("Equipo"), "Equipo");
+        }
 
-        // Panel "Mercado"
-        JPanel panelMercado = crearPanelMercado();
+        // Panel "Clasificación"
+        try {
+            PanelClasificacion panelClasificacion = new PanelClasificacion();
+            JPanel panelContenedorClasificacion = new JPanel(new BorderLayout());
+            panelContenedorClasificacion.setBackground(new Color(18, 18, 18));
+            panelClasificacion.setBackground(new Color(18, 18, 18));
+            panelContenedorClasificacion.add(panelClasificacion, BorderLayout.CENTER);
+            panelContenido.add(panelContenedorClasificacion, "Clasificacion");
+        } catch (Throwable t) {
+        	JPanel panelClasificacion = crearPanel("Clasificacion");
+            panelClasificacion.setBackground(new Color(18, 18, 18)); // también aquí
+            panelContenido.add(panelClasificacion, "Clasificacion");
+        }
+
+        // Panel "Mercado" con barra de búsqueda + saldo
+        JPanel panelMercado = new JPanel(new BorderLayout());
+        panelMercado.setBackground(new Color(18, 18, 18));
+
+        // Barra de búsqueda
+        JPanel barraBusqueda = new JPanel(new BorderLayout());
+        barraBusqueda.setBackground(new Color(28, 28, 28));
+        barraBusqueda.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+
+        JTextField campoBusqueda = new JTextField();
+        campoBusqueda.setPreferredSize(new Dimension(200, 34));
+        campoBusqueda.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        campoBusqueda.setBackground(new Color(40, 40, 40));
+        campoBusqueda.setForeground(Color.WHITE);
+
+        JButton botonBuscar = new JButton("🔍");
+        botonBuscar.setBackground(new Color(231, 76, 60));
+        botonBuscar.setForeground(Color.WHITE);
+        botonBuscar.setFocusPainted(false);
+        botonBuscar.setBorderPainted(false);
+
+        barraBusqueda.add(campoBusqueda, BorderLayout.CENTER);
+        barraBusqueda.add(botonBuscar, BorderLayout.EAST);
+
+        panelMercado.add(barraBusqueda, BorderLayout.NORTH);
+
+        // Panel de saldo en esquina inferior derecha (oculto por defecto)
+        panelSaldo = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        panelSaldo.setBackground(new Color(18, 18, 18));
+        labelSaldo = new JLabel("Saldo: " + saldo + " €");
+        labelSaldo.setForeground(Color.WHITE);
+        labelSaldo.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        panelSaldo.add(labelSaldo);
+        panelSaldo.setVisible(false);
+
+        // Añadimos el panel de saldo al sur del Mercado
+        panelMercado.add(panelSaldo, BorderLayout.SOUTH);
+
         panelContenido.add(panelMercado, "Mercado");
 
-        // Crear botones de navegación con estilo simple
+        // ====== Barra de navegación inferior ======
+        JPanel panelMenu = new JPanel(new GridLayout(1, secciones.length));
+        panelMenu.setBackground(new Color(28, 28, 28));
+
         for (String s : secciones) {
             JButton boton = new JButton(s);
             boton.setPreferredSize(new Dimension(0, 60));
             boton.setFocusPainted(false);
-            boton.setBackground(new Color(52, 152, 219));
+            boton.setBackground(new Color(28, 28, 28));
             boton.setForeground(Color.WHITE);
-            boton.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            boton.setBorderPainted(false);
+            boton.setFont(new Font("Segoe UI", Font.PLAIN, 12));
             boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-            boton.addActionListener((e) -> cardLayout.show(panelContenido, s));
+            boton.addActionListener((e) -> {
+                cardLayout.show(panelContenido, s);
+
+                // Mostrar saldo solo en "Mercado"
+                if ("Mercado".equals(s)) {
+                    panelSaldo.setVisible(true);
+                } else {
+                    panelSaldo.setVisible(false);
+                }
+            });
+
             panelMenu.add(boton);
         }
 
-        JPanel contenedorMenu = new JPanel(new BorderLayout());
-        contenedorMenu.add(panelMenu, BorderLayout.CENTER);
-        contenedorMenu.setPreferredSize(new Dimension(400, 70));
-
-        // Layout general
+        // ====== Layout general ======
         setLayout(new BorderLayout());
-        add(panelSuperior, BorderLayout.NORTH);   // saldo arriba
         add(panelContenido, BorderLayout.CENTER);
-        add(contenedorMenu, BorderLayout.SOUTH);
+        add(panelMenu, BorderLayout.SOUTH);
 
         cardLayout.show(panelContenido, "Mis Ligas");
     }
 
-    // Panel de Mercado con botones superiores
-    private JPanel crearPanelMercado() {
-        JPanel panel = new JPanel(new BorderLayout());
-
-        // Panel superior con botones principales
-        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-
-        JButton btnMercado = new JButton("Mercado");
-        JButton btnOperaciones = new JButton("Mis operaciones");
-        JButton btnHistorico = new JButton("Histórico");
-
-        // Panel para mostrar sub-botones de "Mis operaciones"
-        JPanel panelSubOperaciones = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        panelSubOperaciones.setVisible(false); // inicialmente oculto
-
-        JButton btnCompras = new JButton("Compras");
-        JButton btnVentas = new JButton("Ventas");
-        panelSubOperaciones.add(btnCompras);
-        panelSubOperaciones.add(btnVentas);
-
-        // Acción: mostrar/ocultar sub-botones al clickear "Mis operaciones"
-        btnOperaciones.addActionListener((ActionEvent e) -> {
-            panelSubOperaciones.setVisible(!panelSubOperaciones.isVisible());
-            panel.revalidate();
-            panel.repaint();
-        });
-
-        // Añadir los tres botones principales
-        panelBotones.add(btnMercado);
-        panelBotones.add(btnOperaciones);
-        panelBotones.add(btnHistorico);
-
-        panel.add(panelBotones, BorderLayout.NORTH);
-        panel.add(panelSubOperaciones, BorderLayout.CENTER);
-
-        return panel;
-    }
-
     private JPanel crearPanel(String texto) {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.add(new JLabel("Sección: " + texto, SwingConstants.CENTER), BorderLayout.CENTER);
+        panel.setBackground(new Color(18, 18, 18));
+        JLabel label = new JLabel("Sección: " + texto, SwingConstants.CENTER);
+        label.setForeground(Color.WHITE);
+        panel.add(label, BorderLayout.CENTER);
         return panel;
     }
 
+    // main para probar rápidamente
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            VentanaPrincipal ventana = new VentanaPrincipal();
-            ventana.setVisible(true);
+            VentanaPrincipal vp = new VentanaPrincipal();
+            vp.setVisible(true);
         });
     }
 }
