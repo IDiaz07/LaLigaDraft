@@ -6,7 +6,7 @@ public class VentanaPrincipal extends JFrame {
     private CardLayout cardLayout;
     private JPanel panelContenido;
     private JLabel labelSaldo;
-    private JPanel panelSaldo; // este se verá solo en "Mercado"
+    private JPanel panelSaldo;
     private int saldo = 500000; // saldo inicial ficticio
 
     public VentanaPrincipal() {

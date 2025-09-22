@@ -4,6 +4,9 @@ import java.awt.event.*;
 import javax.swing.*;
 
 public class VentanaIniciarSesion extends JFrame {
+	
+	private JTextField usuario;
+    private JPasswordField contraseña;
 
 	public VentanaIniciarSesion() {
 		setTitle("Inicio de Sesion");
@@ -21,21 +24,15 @@ public class VentanaIniciarSesion extends JFrame {
         
         JPanel panelCampos = new JPanel();
         panelCampos.setLayout(new GridLayout(4, 1, 20, 20));
-        panelCampos.setBorder(BorderFactory.createEmptyBorder(150, 50, 100, 50));
+        panelCampos.setBorder(BorderFactory.createEmptyBorder(150, 50, 5, 50));
         
-        JTextField usuario = new JTextField();
-        JTextField email = new JTextField();
-        JTextField tf = new JTextField();
-        JPasswordField contraseña = new JPasswordField();
+        usuario = new JTextField();
+        contraseña = new JPasswordField();
         
         addPlaceholder(usuario, "Nombre de Usuario");
-        addPlaceholder(email, "Email");
-        addPlaceholder(tf, "Telefono");
         addPlaceholder(contraseña, "Contraseña");
 	    
         panelCampos.add(usuario);
-        panelCampos.add(email);
-        panelCampos.add(tf);
         panelCampos.add(contraseña);
         panelPrincipal.add(panelCampos);
         
@@ -43,7 +40,7 @@ public class VentanaIniciarSesion extends JFrame {
         
         JPanel panelBotones = new JPanel();
         panelBotones.setLayout(new GridLayout(1, 2, 20, 20));
-        panelBotones.setBorder(BorderFactory.createEmptyBorder(325, 50, 100, 50));
+        panelBotones.setBorder(BorderFactory.createEmptyBorder(5, 50, 100, 50));
 
         JButton botonAtras = new JButton("Atras");
         JButton botonIniciarSesion = new JButton("Iniciar Sesion");
@@ -52,8 +49,43 @@ public class VentanaIniciarSesion extends JFrame {
         panelBotones.add(botonIniciarSesion);
         
         botonIniciarSesion.addActionListener((ActionEvent e) -> {
-        	abrirVentanaPrincipal();
+            String nombreUsuario = usuario.getText().trim();
+            String pass = new String(contraseña.getPassword()).trim();
+
+            // Validación campos vacíos
+            if (nombreUsuario.isEmpty() || nombreUsuario.equals("Nombre de Usuario") ||
+                pass.isEmpty() || pass.equals("Contraseña")) {
+                JOptionPane.showMessageDialog(this, "Debes rellenar todos los campos",
+                        "Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Buscar usuario en el diccionario
+            Usuario usuarioEncontrado = GestorDatos.usuarios.values().stream()
+                    .filter(u -> u.getNombre().equalsIgnoreCase(nombreUsuario))
+                    .findFirst()
+                    .orElse(null);
+
+            if (usuarioEncontrado == null) {
+                JOptionPane.showMessageDialog(this, "El usuario no existe",
+                        "Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Verificar contraseña
+            if (!usuarioEncontrado.getContrasena().equals(pass)) {
+                JOptionPane.showMessageDialog(this, "Contraseña incorrecta",
+                        "Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Login correcto
+            JOptionPane.showMessageDialog(this, "Bienvenido " + usuarioEncontrado.getNombre(),
+                    "Login correcto", JOptionPane.INFORMATION_MESSAGE);
+
+            abrirVentanaPrincipal();
         });
+
         botonAtras.addActionListener((ActionEvent e) -> {
             abrirVentanaInicio();
         });
@@ -122,7 +154,7 @@ public class VentanaIniciarSesion extends JFrame {
             VentanaPrincipal ventanaP = new VentanaPrincipal();
             ventanaP.setVisible(true);
         });
-        dispose(); // Cierra la ventana de inicio
+        dispose();
     }
     
     private void abrirVentanaInicio() {
@@ -130,7 +162,7 @@ public class VentanaIniciarSesion extends JFrame {
             VentanaInicio ventanaI = new VentanaInicio();
             ventanaI.setVisible(true);
         });
-        dispose(); // Cierra la ventana de inicio
+        dispose();
     }
     
 }
