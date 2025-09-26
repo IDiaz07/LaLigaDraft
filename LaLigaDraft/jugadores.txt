@@ -315,7 +315,6 @@
 315;Thibaut Courtois;Real Madrid;33;Bélgica;1;20000000;20000000;SANO;POR;0;0;0;0;0;null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null
 316;Andriy Lunin;Real Madrid;26;Ucrania;13;18000000;18000000;SANO;POR;0;0;0;0;0;null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null
 317;Fran González;Real Madrid;20;España;26;800000;800000;SANO;POR;0;0;0;0;0;null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null
-
 318;Dani Carvajal;Real Madrid;33;España;2;10000000;10000000;SANO;DEF;0;0;0;0;0;null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null
 319;Éder Militão;Real Madrid;27;Brasil;3;30000000;30000000;SANO;DEF;0;0;0;0;0;null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null
 320;David Alaba;Real Madrid;33;Austria;4;20000000;20000000;SANO;DEF;0;0;0;0;0;null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null
@@ -325,7 +324,6 @@
 324;Álvaro Carreras;Real Madrid;22;España;18;5000000;5000000;SANO;DEF;0;0;0;0;0;null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null
 325;Fran García;Real Madrid;26;España;23;1000000;1000000;SANO;DEF;0;0;0;0;0;null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null
 326;Diego Aguado;Real Madrid;18;España;32;500000;500000;SANO;DEF;0;0;0;0;0;null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null
-
 327;Jude Bellingham;Real Madrid;22;Inglaterra;5;180000000;180000000;SANO;MED;0;0;0;0;0;null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null
 328;Eduardo Camavinga;Real Madrid;22;Francia;6;60000000;60000000;SANO;MED;0;0;0;0;0;null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null
 329;Federico Valverde;Real Madrid;27;Uruguay;8;130000000;130000000;SANO;MED;0;0;0;0;0;null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null
@@ -336,7 +334,6 @@
 334;David Jiménez;Real Madrid;21;España;40;700000;700000;SANO;MED;0;0;0;0;0;null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null
 335;Jorge Cestero;Real Madrid;19;España;24;400000;400000;SANO;MED;0;0;0;0;0;null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null
 336;Pol Fortuny;Real Madrid;20;España;28;400000;400000;SANO;MED;0;0;0;0;0;null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null
-
 337;Vinícius Júnior;Real Madrid;25;Brasil;7;80000000;80000000;SANO;DEL;0;0;0;0;0;null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null
 338;Endrick;Real Madrid;19;Brasil;9;60000000;60000000;SANO;DEL;0;0;0;0;0;null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null
 339;Kylian Mbappé;Real Madrid;26;Francia;10;150000000;150000000;SANO;DEL;0;0;0;0;0;null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null

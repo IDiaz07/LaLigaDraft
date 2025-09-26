@@ -107,9 +107,15 @@ public class GestorDatos {
     }
 
     // ----------------- LIGAS -----------------
+    // Versión básica (para compatibilidad)
     public static Liga registrarLiga(String nombre) {
+        return registrarLiga(nombre, true, null);
+    }
+
+    // Nueva versión con pública/privada y código
+    public static Liga registrarLiga(String nombre, boolean publica, String codigoInvitacion) {
         int id = ++contadorLigas;
-        Liga l = new Liga(id, nombre);
+        Liga l = new Liga(id, nombre, publica, codigoInvitacion);
         ligas.put(id, l);
         guardarLigas();
         return l;
@@ -142,6 +148,28 @@ public class GestorDatos {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    // ----------------- UTILIDADES DE LIGAS -----------------
+    public static void agregarUsuarioALiga(int idUsuario, int idLiga) {
+        Usuario u = usuarios.get(idUsuario);
+        Liga l = ligas.get(idLiga);
+        if (u == null || l == null) return;
+
+        l.addUsuario(idUsuario);
+        u.addLiga(idLiga);
+
+        guardarUsuarios();
+        guardarLigas();
+    }
+
+    public static Liga buscarLigaPublicaDisponible() {
+        for (Liga l : ligas.values()) {
+            if (l.isPublica()) {
+                return l;
+            }
+        }
+        return null;
     }
 
     // ----------------- INICIALIZACIÓN -----------------

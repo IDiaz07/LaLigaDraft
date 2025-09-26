@@ -81,9 +81,23 @@ public class VentanaIniciarSesion extends JFrame {
 
             // Login correcto
             JOptionPane.showMessageDialog(this, "Bienvenido " + usuarioEncontrado.getNombre(),
-                    "Login correcto", JOptionPane.INFORMATION_MESSAGE);
+            		"Login correcto", JOptionPane.INFORMATION_MESSAGE);
 
-            abrirVentanaPrincipal();
+            // Si es Admin1, va directo a la principal
+            if ("Admin1".equalsIgnoreCase(usuarioEncontrado.getNombre())) {
+                dispose();
+                SwingUtilities.invokeLater(() -> new VentanaPrincipal().setVisible(true));
+                return;
+            }
+
+            // Si no tiene ligas -> abrir selector; si tiene -> principal
+            if (usuarioEncontrado.getLigas() == null || usuarioEncontrado.getLigas().isEmpty()) {
+                dispose();
+                SwingUtilities.invokeLater(() -> new VentanaSeleccionLiga(usuarioEncontrado).setVisible(true));
+            } else {
+                dispose();
+                SwingUtilities.invokeLater(() -> new VentanaPrincipal().setVisible(true));
+            }
         });
 
         botonAtras.addActionListener((ActionEvent e) -> {
