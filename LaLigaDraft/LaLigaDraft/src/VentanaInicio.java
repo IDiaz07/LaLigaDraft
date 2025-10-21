@@ -73,9 +73,9 @@ public class VentanaInicio extends JFrame {
     }
     
     public static void main(String[] args) {
-    	GestorDatos.cargarUsuarios();
-        GestorDatos.cargarJugadores();
-        GestorDatos.cargarLigas();
+    	GestorDatos.cargarTodo();
+    	System.out.println("Usuarios cargados: " + GestorDatos.usuarios.size());
+
         
         SwingUtilities.invokeLater(() -> {
             VentanaInicio ventanaInicio = new VentanaInicio();

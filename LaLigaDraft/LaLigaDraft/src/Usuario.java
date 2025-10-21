@@ -11,6 +11,7 @@ public class Usuario {
     private int saldo;
     private List<Integer> jugadores; // IDs
     private List<Integer> ligas;     // IDs
+    private boolean equipoMostrado;
 
     public Usuario(int id, String nombre, String email, String telefono, String contrasena, int saldoInicial) {
         this.id = id;
@@ -21,6 +22,7 @@ public class Usuario {
         this.saldo = saldoInicial;
         this.jugadores = new ArrayList<>();
         this.ligas = new ArrayList<>();
+        this.equipoMostrado = false; // por defecto no se ha mostrado
     }
 
     // Getters
@@ -37,11 +39,16 @@ public class Usuario {
     public void addJugador(int idJugador) { jugadores.add(idJugador); }
     public void addLiga(int idLiga) { ligas.add(idLiga); }
 
+    // NUEVO: equipoMostrado
+    public boolean isEquipoMostrado() { return equipoMostrado; }
+    public void setEquipoMostrado(boolean equipoMostrado) { this.equipoMostrado = equipoMostrado; }
+
     // Exportar a línea (compatible Java 8/11)
     public String toFileString() {
         String jugStr = String.join(",", jugadores.stream().map(String::valueOf).collect(Collectors.toList()));
         String ligStr = String.join(",", ligas.stream().map(String::valueOf).collect(Collectors.toList()));
-        return id + ";" + nombre + ";" + email + ";" + telefono + ";" + contrasena + ";" + saldo + ";" + jugStr + ";" + ligStr;
+        return id + ";" + nombre + ";" + email + ";" + telefono + ";" + contrasena + ";" + saldo + ";" +
+               jugStr + ";" + ligStr + ";" + (equipoMostrado ? "1" : "0");
     }
 
     // Crear desde línea
@@ -68,11 +75,16 @@ public class Usuario {
                 if (!l.trim().isEmpty()) u.addLiga(Integer.parseInt(l.trim()));
             }
         }
+        if (partes.length >= 9) {
+            u.equipoMostrado = partes[8].equals("1");
+        }
+
         return u;
     }
 
     @Override
     public String toString() {
-        return "Usuario{id=" + id + ", nombre='" + nombre + "', saldo=" + saldo + "}";
+        return "Usuario{id=" + id + ", nombre='" + nombre + "', saldo=" + saldo +
+                ", equipoMostrado=" + equipoMostrado + "}";
     }
 }

@@ -81,12 +81,15 @@ public class VentanaIniciarSesion extends JFrame {
 
             // Login correcto
             JOptionPane.showMessageDialog(this, "Bienvenido " + usuarioEncontrado.getNombre(),
-            		"Login correcto", JOptionPane.INFORMATION_MESSAGE);
+                    "Login correcto", JOptionPane.INFORMATION_MESSAGE);
+
+            // 🔹 Asignar equipo inicial si no tiene jugadores
+            GestorDatos.asignarEquipoInicial(usuarioEncontrado);
 
             // Si es Admin1, va directo a la principal
             if ("Admin1".equalsIgnoreCase(usuarioEncontrado.getNombre())) {
                 dispose();
-                SwingUtilities.invokeLater(() -> new VentanaPrincipal().setVisible(true));
+                SwingUtilities.invokeLater(() -> new VentanaPrincipal(usuarioEncontrado).setVisible(true));
                 return;
             }
 
@@ -96,9 +99,10 @@ public class VentanaIniciarSesion extends JFrame {
                 SwingUtilities.invokeLater(() -> new VentanaSeleccionLiga(usuarioEncontrado).setVisible(true));
             } else {
                 dispose();
-                SwingUtilities.invokeLater(() -> new VentanaPrincipal().setVisible(true));
+                SwingUtilities.invokeLater(() -> new VentanaPrincipal(usuarioEncontrado).setVisible(true));
             }
         });
+
 
         botonAtras.addActionListener((ActionEvent e) -> {
             abrirVentanaInicio();
@@ -161,15 +165,7 @@ public class VentanaIniciarSesion extends JFrame {
             }
         });
     }
-    
-    
-    private void abrirVentanaPrincipal() {
-        SwingUtilities.invokeLater(() -> {
-            VentanaPrincipal ventanaP = new VentanaPrincipal();
-            ventanaP.setVisible(true);
-        });
-        dispose();
-    }
+
     
     private void abrirVentanaInicio() {
         SwingUtilities.invokeLater(() -> {

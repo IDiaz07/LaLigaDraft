@@ -36,7 +36,8 @@ public class GestorDatos {
 
     public static void cargarUsuarios() {
         File f = new File(FILE_USUARIOS);
-        if (!f.exists()) return;
+        //System.out.println("Ruta absoluta buscada: " + f.getAbsolutePath());
+        if (!f.exists()) { /*System.out.println("⚠️ El archivo usuarios.txt no existe en esa ruta.");*/ return;}
 
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String linea;
@@ -112,7 +113,6 @@ public class GestorDatos {
         return registrarLiga(nombre, true, null);
     }
 
-    // Nueva versión con pública/privada y código
     public static Liga registrarLiga(String nombre, boolean publica, String codigoInvitacion) {
         int id = ++contadorLigas;
         Liga l = new Liga(id, nombre, publica, codigoInvitacion);
@@ -184,4 +184,63 @@ public class GestorDatos {
         guardarJugadores();
         guardarLigas();
     }
+    
+ // ----------------- ASIGNAR EQUIPO INICIAL -----------------
+    public static void asignarEquipoInicial(Usuario usuario) {
+        // Solo si no tiene jugadores ya
+        if (usuario.getJugadores() != null && !usuario.getJugadores().isEmpty()) {
+            return;
+        }
+
+        // Filtrar jugadores disponibles (sin propietario)
+        List<Jugador> libres = new ArrayList<>();
+        for (Jugador j : jugadores.values()) {
+            if (j.getPropietario() == 0) { // o usa null si no hay propietario
+                libres.add(j);
+            }
+        }
+
+        // Agrupar por posición
+        List<Jugador> por = new ArrayList<>();
+        List<Jugador> def = new ArrayList<>();
+        List<Jugador> med = new ArrayList<>();
+        List<Jugador> del = new ArrayList<>();
+
+        for (Jugador j : libres) {
+            switch (j.getPosicion()) {
+                case POR: por.add(j); break;
+                case DEF: def.add(j); break;
+                case MED: med.add(j); break;
+                case DEL: del.add(j); break;
+                default: break;
+            }
+        }
+
+        Random r = new Random();
+        List<Jugador> asignados = new ArrayList<>();
+
+        // Helper para coger n aleatorios de una lista
+        java.util.function.BiConsumer<List<Jugador>, Integer> coger = (lista, n) -> {
+            for (int i = 0; i < n && !lista.isEmpty(); i++) {
+                Jugador j = lista.remove(r.nextInt(lista.size()));
+                asignados.add(j);
+            }
+        };
+
+        coger.accept(por, 2);
+        coger.accept(def, 5);
+        coger.accept(med, 5);
+        coger.accept(del, 3);
+
+        // Asignar propietario
+        for (Jugador j : asignados) {
+            j.setPropietario(usuario.getId());
+            usuario.addJugador(j.getId());
+        }
+
+        guardarUsuarios();
+        guardarJugadores();
+        System.out.println("✅ Se asignaron " + asignados.size() + " jugadores a " + usuario.getNombre());
+    }
+
 }

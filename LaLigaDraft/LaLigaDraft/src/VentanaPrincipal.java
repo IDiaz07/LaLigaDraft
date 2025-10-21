@@ -3,14 +3,17 @@ import java.awt.*;
 
 public class VentanaPrincipal extends JFrame {
 
+	private final Usuario usuario;
     private CardLayout cardLayout;
     private JPanel panelContenido;
     private JLabel labelSaldo;
     private JPanel panelSaldo;
     private int saldo = 500000; // saldo inicial ficticio
 
-    public VentanaPrincipal() {
-        setTitle("Liga Fantasy");
+    public VentanaPrincipal(Usuario usuario) {
+    	this.usuario = usuario;
+    	
+    	setTitle("Liga Fantasy");
         setSize(400, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -32,7 +35,7 @@ public class VentanaPrincipal extends JFrame {
 
         // Panel "Equipo" (sin cambios)
         try {
-            PanelEquipo panelEquipo = new PanelEquipo();
+            PanelEquipo panelEquipo = new PanelEquipo(usuario);
             JPanel panelContenedorEquipo = new JPanel(new BorderLayout());
             panelContenedorEquipo.add(panelEquipo, BorderLayout.CENTER);
             panelContenido.add(panelContenedorEquipo, "Equipo");
@@ -128,7 +131,16 @@ public class VentanaPrincipal extends JFrame {
         add(panelMenu, BorderLayout.SOUTH);
 
         cardLayout.show(panelContenido, "Mis Ligas");
+    
+        if (usuario.getJugadores() != null && usuario.getJugadores().size() == 15) {
+            // Se asume que 15 jugadores es el equipo inicial asignado
+            SwingUtilities.invokeLater(() -> {
+                VentanaEquipoInicial ve = new VentanaEquipoInicial(usuario);
+                ve.setVisible(true);
+            });
+        }
     }
+    
 
     private JPanel crearPanel(String texto) {
         JPanel panel = new JPanel(new BorderLayout());
@@ -137,13 +149,5 @@ public class VentanaPrincipal extends JFrame {
         label.setForeground(Color.WHITE);
         panel.add(label, BorderLayout.CENTER);
         return panel;
-    }
-
-    // main para probar rápidamente
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            VentanaPrincipal vp = new VentanaPrincipal();
-            vp.setVisible(true);
-        });
     }
 }
