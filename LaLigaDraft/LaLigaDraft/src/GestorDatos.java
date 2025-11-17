@@ -91,7 +91,7 @@ public class GestorDatos {
 
     public static void cargarJugadores() {
         File f = new File(FILE_JUGADORES);
-        if (!f.exists()) return;
+        if (!f.exists()) {System.out.println("⚠️ El archivo usuarios.txt no existe en esa ruta."); return;}
 
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String linea;
