@@ -12,6 +12,7 @@ public class Usuario {
     private List<Integer> jugadores; // IDs
     private List<Integer> ligas;     // IDs
     private boolean equipoMostrado;
+    private int ligaActualId = -1; // NUEVO: ID de la liga que está viendo actualmente
 
     public Usuario(int id, String nombre, String email, String telefono, String contrasena, int saldoInicial) {
         this.id = id;
@@ -22,7 +23,7 @@ public class Usuario {
         this.saldo = saldoInicial;
         this.jugadores = new ArrayList<>();
         this.ligas = new ArrayList<>();
-        this.equipoMostrado = false; // por defecto no se ha mostrado
+        this.equipoMostrado = false;
     }
 
     // Getters
@@ -34,24 +35,28 @@ public class Usuario {
     public int getSaldo() { return saldo; }
     public List<Integer> getJugadores() { return jugadores; }
     public List<Integer> getLigas() { return ligas; }
+    public boolean isEquipoMostrado() { return equipoMostrado; }
+    
+    // NUEVO: Getter y Setter para la liga actual
+    public int getLigaActualId() { return ligaActualId; }
+    public void setLigaActualId(int ligaActualId) { this.ligaActualId = ligaActualId; }
 
     // Métodos auxiliares
     public void addJugador(int idJugador) { jugadores.add(idJugador); }
     public void addLiga(int idLiga) { ligas.add(idLiga); }
-
-    // NUEVO: equipoMostrado
-    public boolean isEquipoMostrado() { return equipoMostrado; }
     public void setEquipoMostrado(boolean equipoMostrado) { this.equipoMostrado = equipoMostrado; }
 
-    // Exportar a línea (compatible Java 8/11)
+    // Exportar a línea (compatible Java 8/11) - ¡MODIFICADO!
     public String toFileString() {
         String jugStr = String.join(",", jugadores.stream().map(String::valueOf).collect(Collectors.toList()));
         String ligStr = String.join(",", ligas.stream().map(String::valueOf).collect(Collectors.toList()));
+        
+        // Se añade ligaActualId al final
         return id + ";" + nombre + ";" + email + ";" + telefono + ";" + contrasena + ";" + saldo + ";" +
-               jugStr + ";" + ligStr + ";" + (equipoMostrado ? "1" : "0");
+               jugStr + ";" + ligStr + ";" + (equipoMostrado ? "1" : "0") + ";" + ligaActualId;
     }
 
-    // Crear desde línea
+    // Crear desde línea - ¡MODIFICADO!
     public static Usuario fromFileString(String linea) {
         String[] partes = linea.split(";");
         if (partes.length < 6) return null;
@@ -78,6 +83,15 @@ public class Usuario {
         if (partes.length >= 9) {
             u.equipoMostrado = partes[8].equals("1");
         }
+        
+        // Se lee ligaActualId
+        if (partes.length >= 10) { 
+            try {
+                u.ligaActualId = Integer.parseInt(partes[9]);
+            } catch (NumberFormatException e) {
+                u.ligaActualId = -1;
+            }
+        }
 
         return u;
     }
@@ -85,6 +99,6 @@ public class Usuario {
     @Override
     public String toString() {
         return "Usuario{id=" + id + ", nombre='" + nombre + "', saldo=" + saldo +
-                ", equipoMostrado=" + equipoMostrado + "}";
+               ", equipoMostrado=" + equipoMostrado + ", ligaActualId=" + ligaActualId + "}";
     }
 }

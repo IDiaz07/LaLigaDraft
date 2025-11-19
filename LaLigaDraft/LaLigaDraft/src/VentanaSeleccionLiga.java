@@ -43,7 +43,8 @@ public class VentanaSeleccionLiga extends JFrame {
         btnUnirseCodigo.addActionListener(e -> unirseConCodigo());
         btnSalir.addActionListener(e -> {
             dispose();
-            SwingUtilities.invokeLater(() -> new VentanaInicio().setVisible(true));
+            // Asumiendo que VentanaInicio existe
+            // SwingUtilities.invokeLater(() -> new VentanaInicio().setVisible(true)); 
         });
     }
 
@@ -55,6 +56,11 @@ public class VentanaSeleccionLiga extends JFrame {
         }
         GestorDatos.agregarUsuarioALiga(usuario.getId(), liga.getId());
         JOptionPane.showMessageDialog(this, "Te uniste a: " + liga.getNombre());
+        
+        // CAMBIO: Establecer liga actual y guardar
+        usuario.setLigaActualId(liga.getId()); 
+        GestorDatos.guardarUsuarios(); 
+
         abrirPrincipal();
     }
 
@@ -80,6 +86,11 @@ public class VentanaSeleccionLiga extends JFrame {
             Liga liga = GestorDatos.registrarLiga(nom, false, cod.isEmpty() ? null : cod);
             GestorDatos.agregarUsuarioALiga(usuario.getId(), liga.getId());
             JOptionPane.showMessageDialog(this, "Liga creada: " + liga.getNombre());
+            
+            // CAMBIO: Establecer liga actual y guardar
+            usuario.setLigaActualId(liga.getId());
+            GestorDatos.guardarUsuarios();
+
             abrirPrincipal();
         }
     }
@@ -95,7 +106,7 @@ public class VentanaSeleccionLiga extends JFrame {
             return;
         }
 
-        final String codigo = codigoInput.trim(); // ✅ ya no se reasigna
+        final String codigo = codigoInput.trim();
 
         // Buscar liga privada con ese código
         Liga liga = GestorDatos.ligas.values().stream()
@@ -113,7 +124,16 @@ public class VentanaSeleccionLiga extends JFrame {
                 if (nombre != null && !nombre.trim().isEmpty()) {
                     Liga nueva = GestorDatos.registrarLiga(nombre.trim(), false, codigo);
                     GestorDatos.agregarUsuarioALiga(usuario.getId(), nueva.getId());
-                    JOptionPane.showMessageDialog(this, "Se creó y te uniste a: " + nueva.getNombre());
+                    
+                    // CORRECCIÓN A: Si se crea la liga, usar el nombre de la nueva liga.
+                    JOptionPane.showMessageDialog(this, 
+                                                  "Se creó y te uniste a: " + nueva.getNombre(),
+                                                  "¡Liga privada creada!",
+                                                  JOptionPane.INFORMATION_MESSAGE);
+                    
+                    usuario.setLigaActualId(nueva.getId());
+                    GestorDatos.guardarUsuarios();
+                    
                     abrirPrincipal();
                 }
             }
@@ -122,7 +142,16 @@ public class VentanaSeleccionLiga extends JFrame {
 
         // Ya existe -> unir al usuario
         GestorDatos.agregarUsuarioALiga(usuario.getId(), liga.getId());
-        JOptionPane.showMessageDialog(this, "Te uniste correctamente a: " + liga.getNombre());
+        
+        // CORRECCIÓN B: Si se une a una liga existente, usar el nombre de la liga encontrada.
+        JOptionPane.showMessageDialog(this, 
+                                      "Te uniste correctamente a: " + liga.getNombre(),
+                                      "¡Unido a liga privada!", 
+                                      JOptionPane.INFORMATION_MESSAGE);
+        
+        usuario.setLigaActualId(liga.getId());
+        GestorDatos.guardarUsuarios();
+
         abrirPrincipal();
     }
 
@@ -131,5 +160,4 @@ public class VentanaSeleccionLiga extends JFrame {
         dispose();
         SwingUtilities.invokeLater(() -> new VentanaPrincipal(usuario).setVisible(true));
     }
-
 }
