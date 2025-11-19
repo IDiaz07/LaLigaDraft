@@ -8,20 +8,75 @@ import java.util.stream.Collectors;
 public class PanelEquipo extends JPanel {
 
     private final Usuario usuario;
-    private List<JLabel> labelsTitulares = new ArrayList<>();
+    // Contenedor principal con CardLayout
+    private final JPanel cards; 
+    private final CardLayout cardLayout;
+    
+    // Antiguo campo (ahora será la vista "Alineación")
     private JPanel campo;
+    private List<JLabel> labelsTitulares = new ArrayList<>();
     private JComboBox<String> comboFormacion;
 
     private List<Jugador> titularesActuales = new ArrayList<>();
     private List<Jugador> suplentesActuales = new ArrayList<>();
 
+    // -------------------------------------------------------------
+    // Constructor
+    // -------------------------------------------------------------
     public PanelEquipo(Usuario usuario) {
         this.usuario = usuario;
 
         setLayout(new BorderLayout());
         setBackground(Color.DARK_GRAY);
 
-        // ======================= CAMPO =======================
+        // 1. Configurar CardLayout
+        cardLayout = new CardLayout();
+        cards = new JPanel(cardLayout);
+        add(cards, BorderLayout.CENTER);
+
+        // 2. Crear las dos secciones (Paneles)
+        JPanel panelAlineacion = crearPanelAlineacion(); 
+        JPanel panelPlantilla = crearPanelPlantilla();   
+
+        cards.add(panelAlineacion, "Alineacion");
+        cards.add(panelPlantilla, "Plantilla");
+
+        // 3. Panel de Navegación (botones "Alineación" y "Plantilla")
+        JPanel panelNavegacion = crearPanelNavegacion();
+        add(panelNavegacion, BorderLayout.NORTH);
+
+        // ======================= INICIALIZACIÓN =======================
+        seleccionarJugadoresIniciales();
+        actualizarFormacion();
+        cardLayout.show(cards, "Alineacion"); // Mostrar la alineación por defecto
+    }
+
+    // -------------------------------------------------------------
+    // Panel de Navegación con botones
+    // -------------------------------------------------------------
+    private JPanel crearPanelNavegacion() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        panel.setBackground(new Color(18, 18, 18));
+        
+        JButton btnAlineacion = new JButton("Alineación");
+        btnAlineacion.addActionListener(e -> cardLayout.show(cards, "Alineacion"));
+        panel.add(btnAlineacion);
+
+        JButton btnPlantilla = new JButton("Plantilla");
+        btnPlantilla.addActionListener(e -> cardLayout.show(cards, "Plantilla"));
+        panel.add(btnPlantilla);
+        
+        return panel;
+    }
+
+    // -------------------------------------------------------------
+    // Método que contiene la vista de la Alineación (el campo)
+    // -------------------------------------------------------------
+    private JPanel crearPanelAlineacion() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(Color.DARK_GRAY);
+        
+        // ======================= CAMPO (Contenido existente) =======================
         campo = new JPanel(null) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -39,16 +94,16 @@ public class PanelEquipo extends JPanel {
         };
         campo.setPreferredSize(new Dimension(400, 400));
         campo.setBorder(BorderFactory.createLineBorder(Color.white, 2));
-        add(campo, BorderLayout.CENTER);
+        panel.add(campo, BorderLayout.CENTER);
 
-        // ======================= TITULARES =======================
+        // ======================= TITULARES (Contenido existente) =======================
         for (int i = 0; i < 11; i++) {
             JLabel lbl = crearLabelJugador(i);
             labelsTitulares.add(lbl);
             campo.add(lbl);
         }
 
-        // ======================= PANEL INFERIOR =======================
+        // ======================= PANEL INFERIOR (Contenido existente) =======================
         JPanel panelInferior = new JPanel(new FlowLayout(FlowLayout.LEFT));
         panelInferior.setBackground(new Color(18, 18, 18));
         panelInferior.setPreferredSize(new Dimension(400, 50));
@@ -56,12 +111,69 @@ public class PanelEquipo extends JPanel {
         comboFormacion = new JComboBox<>(new String[]{"4-4-2", "4-3-3", "3-5-2"});
         comboFormacion.addActionListener(e -> actualizarFormacion());
         panelInferior.add(comboFormacion);
-        add(panelInferior, BorderLayout.SOUTH);
-
-        // ======================= INICIALIZACIÓN =======================
-        seleccionarJugadoresIniciales();
-        actualizarFormacion();
+        panel.add(panelInferior, BorderLayout.SOUTH);
+        
+        return panel;
     }
+    
+    // -------------------------------------------------------------
+    // Panel que muestra la Plantilla en formato visual de tabla/lista
+    // -------------------------------------------------------------
+    private JPanel crearPanelPlantilla() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(Color.DARK_GRAY);
+
+        // Obtener la plantilla completa
+        List<Jugador> todaLaPlantilla = usuario.getJugadores().stream()
+                .map(id -> GestorDatos.jugadores.get(id))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        // Ordenar la plantilla por posición (POR, DEF, MED, DEL)
+        todaLaPlantilla.sort(Comparator.comparing(Jugador::getPosicion)
+                                        .thenComparing(Jugador::getValorMercado, Comparator.reverseOrder()));
+
+        // Nombres de las columnas
+        String[] nombresColumnas = {"Posición", "Nombre", "Valor (€)", "Puntos Totales"};
+        Object[][] datos = todaLaPlantilla.stream()
+            .map(j -> new Object[]{
+                j.getPosicion().toString(),
+                j.getNombre() + " (" + j.getEquipo() + ")",
+                String.format("%,d", j.getValorMercado()), // Formato de moneda para visualización
+                j.getTotalPuntos()
+            })
+            .toArray(Object[][]::new);
+
+        JTable tablaPlantilla = new JTable(datos, nombresColumnas);
+        
+        // Estilización de la tabla (opcional)
+        tablaPlantilla.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tablaPlantilla.setRowHeight(25);
+        tablaPlantilla.setBackground(new Color(40, 40, 40));
+        tablaPlantilla.setForeground(Color.WHITE);
+        tablaPlantilla.getTableHeader().setBackground(new Color(60, 60, 60));
+        tablaPlantilla.getTableHeader().setForeground(Color.WHITE);
+        tablaPlantilla.setEnabled(false); // La tabla es solo para visualización
+
+        JScrollPane scrollPane = new JScrollPane(tablaPlantilla);
+        scrollPane.getViewport().setBackground(new Color(40, 40, 40));
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Etiqueta de título
+        JLabel titulo = new JLabel("Plantilla Completa", SwingConstants.CENTER);
+        titulo.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titulo.setForeground(Color.WHITE);
+        titulo.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        panel.add(titulo, BorderLayout.NORTH);
+
+        return panel;
+    }
+
+    // -------------------------------------------------------------
+    // MÉTODOS EXISTENTES (Pequeños ajustes para coherencia y Tooltip)
+    // -------------------------------------------------------------
 
     /** Crear label de jugador con listener */
     private JLabel crearLabelJugador(int index) {
@@ -201,8 +313,9 @@ public class PanelEquipo extends JPanel {
     private void colocarJugador(Jugador j, JLabel lbl, int x, int y) {
         lbl.setLocation(x, y);
         lbl.setText(j.getNombre());
+        // Ajuste en el formato del valor para el Tooltip
         lbl.setToolTipText(j.getPosicion() + " | " + j.getEquipo() +
-                " | Valor: " + j.getValorMercado() + "€ | Pts: " + j.getTotalPuntos());
+                " | Valor: " + String.format("%,d", j.getValorMercado()) + "€ | Pts: " + j.getTotalPuntos());
     }
 
     /** Refresca el campo con los jugadores actuales (sin recalcular) */
