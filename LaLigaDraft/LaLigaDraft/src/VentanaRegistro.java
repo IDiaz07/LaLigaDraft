@@ -23,7 +23,7 @@ public class VentanaRegistro extends JFrame {
 
         JPanel panelPrincipal = new JPanel();
         panelPrincipal.setLayout(new BorderLayout());
-        JLabel labelIniciarSesion = new JLabel("REGISTRAR SESION", SwingConstants.CENTER);
+        JLabel labelIniciarSesion = new JLabel("REGISTRAR SESIÓN", SwingConstants.CENTER);
         labelIniciarSesion.setFont(new Font("Arial", Font.BOLD, 20));
         labelIniciarSesion.setBorder(BorderFactory.createEmptyBorder(40, 10, 40, 10));
         panelPrincipal.add(labelIniciarSesion, BorderLayout.NORTH);
