@@ -17,7 +17,7 @@ public class VentanaEquipoInicial extends JFrame {
 
         
         // Panel principal con 4 tablas
-        JPanel mainPanel = new JPanel(new GridLayout(2, 2, 10, 10));
+        JPanel mainPanel = new JPanel(new GridLayout(4, 1, 10, 10));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // Crear cada tabla
@@ -60,6 +60,7 @@ public class VentanaEquipoInicial extends JFrame {
         JTable tabla = new JTable(modelo);
         tabla.setEnabled(false);
         JScrollPane scroll = new JScrollPane(tabla);
+        tabla.getTableHeader().setReorderingAllowed(false);
 
         // Panel con título
         JPanel panel = new JPanel(new BorderLayout());

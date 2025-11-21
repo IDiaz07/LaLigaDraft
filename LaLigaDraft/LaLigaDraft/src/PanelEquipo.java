@@ -1,7 +1,9 @@
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 import java.awt.*;
+import java.awt.color.ColorSpace;
 import java.awt.event.*;
 import java.util.*;
 import java.util.List;
@@ -11,9 +13,9 @@ public class PanelEquipo extends JPanel {
 
     private final Usuario usuario;
     // Contenedor principal con CardLayout
-    private final JPanel cards; 
+    private final JPanel cards;
     private final CardLayout cardLayout;
-    
+
     // Antiguo campo (ahora será la vista "Alineación")
     private JPanel campo;
     private List<JLabel> labelsTitulares = new ArrayList<>();
@@ -37,8 +39,8 @@ public class PanelEquipo extends JPanel {
         add(cards, BorderLayout.CENTER);
 
         // 2. Crear las dos secciones (Paneles)
-        JPanel panelAlineacion = crearPanelAlineacion(); 
-        JPanel panelPlantilla = crearPanelPlantilla();   
+        JPanel panelAlineacion = crearPanelAlineacion();
+        JPanel panelPlantilla = crearPanelPlantilla(); // Aquí se aplica la modificación
 
         cards.add(panelAlineacion, "Alineacion");
         cards.add(panelPlantilla, "Plantilla");
@@ -59,7 +61,7 @@ public class PanelEquipo extends JPanel {
     private JPanel crearPanelNavegacion() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         panel.setBackground(new Color(18, 18, 18));
-        
+
         JButton btnAlineacion = new JButton("Alineación");
         btnAlineacion.addActionListener(e -> cardLayout.show(cards, "Alineacion"));
         panel.add(btnAlineacion);
@@ -67,7 +69,7 @@ public class PanelEquipo extends JPanel {
         JButton btnPlantilla = new JButton("Plantilla");
         btnPlantilla.addActionListener(e -> cardLayout.show(cards, "Plantilla"));
         panel.add(btnPlantilla);
-        
+
         return panel;
     }
 
@@ -77,7 +79,7 @@ public class PanelEquipo extends JPanel {
     private JPanel crearPanelAlineacion() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(Color.DARK_GRAY);
-        
+
         // ======================= CAMPO (Contenido existente) =======================
         campo = new JPanel(null) {
             @Override
@@ -114,76 +116,108 @@ public class PanelEquipo extends JPanel {
         comboFormacion.addActionListener(e -> actualizarFormacion());
         panelInferior.add(comboFormacion);
         panel.add(panelInferior, BorderLayout.SOUTH);
-        
+
         return panel;
     }
-    
+
     // -------------------------------------------------------------
     // Panel que muestra la Plantilla en formato visual de tabla/lista
+    // MODIFICADO: AÑADE EL VALOR TOTAL DEL EQUIPO
     // -------------------------------------------------------------
     private JPanel crearPanelPlantilla() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(Color.DARK_GRAY);
+        panel.setBackground(new Color(18, 18, 18)); // Usamos el color oscuro uniforme
 
-        // Obtener la plantilla completa
+        // 1. Obtener la plantilla completa y calcular el valor total
         List<Jugador> todaLaPlantilla = usuario.getJugadores().stream()
                 .map(id -> GestorDatos.jugadores.get(id))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
+        // Calcular la suma total del valor de mercado
+        long valorTotal = todaLaPlantilla.stream()
+                .mapToLong(Jugador::getValorMercado)
+                .sum();
+
         // Ordenar la plantilla por posición (POR, DEF, MED, DEL)
         todaLaPlantilla.sort(Comparator.comparing(Jugador::getPosicion)
-                                        .thenComparing(Jugador::getValorMercado, Comparator.reverseOrder()));
+                                     .thenComparing(Jugador::getValorMercado, Comparator.reverseOrder()));
 
-        // Nombres de las columnas
+        // 2. Preparar la tabla de jugadores 
         String[] nombresColumnas = {"Posición", "Nombre", "Valor (€)", "Puntos Totales"};
         Object[][] datos = todaLaPlantilla.stream()
-            .map(j -> new Object[]{
-                j.getPosicion().toString(),
-                j.getNombre() + " (" + j.getEquipo() + ")",
-                String.format("%,d", j.getValorMercado()), // Formato de moneda para visualización
-                j.getTotalPuntos()
-            })
-            .toArray(Object[][]::new);
+                .map(j -> new Object[]{
+                        j.getPosicion().toString(),
+                        j.getNombre() + " (" + j.getEquipo() + ")",
+                        String.format("%,d", j.getValorMercado()),
+                        j.getTotalPuntos()
+                })
+                .toArray(Object[][]::new);
         DefaultTableModel modelo = new DefaultTableModel(datos, nombresColumnas) {
-        	@Override
-        	public boolean isCellEditable(int row, int column) {
-        		return false;
-        	}
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
         };
 
         JTable tablaPlantilla = new JTable(modelo);
-        
-        // Estilización de la tabla (opcional)
-        tablaPlantilla.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        tablaPlantilla.setRowHeight(25);
+
+        // Aplicar estilos (manteniendo el tema oscuro y moderno)
+        tablaPlantilla.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        tablaPlantilla.setRowHeight(30);
         tablaPlantilla.setBackground(new Color(40, 40, 40));
         tablaPlantilla.setForeground(Color.WHITE);
+        tablaPlantilla.setGridColor(new Color(60, 60, 60));
         tablaPlantilla.getTableHeader().setBackground(new Color(60, 60, 60));
         tablaPlantilla.getTableHeader().setForeground(Color.WHITE);
+        tablaPlantilla.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
         tablaPlantilla.getTableHeader().setReorderingAllowed(false);
-        //tablaPlantilla.setEnabled(false); // La tabla es solo para visualización
+        
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        tablaPlantilla.getColumnModel().getColumn(0).setPreferredWidth(80);
+        tablaPlantilla.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
+        tablaPlantilla.getColumnModel().getColumn(2).setPreferredWidth(120);
+        tablaPlantilla.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
+        tablaPlantilla.getColumnModel().getColumn(3).setPreferredWidth(100);
+        tablaPlantilla.getColumnModel().getColumn(3).setCellRenderer(centerRenderer);
 
         JScrollPane scrollPane = new JScrollPane(tablaPlantilla);
         scrollPane.getViewport().setBackground(new Color(40, 40, 40));
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
 
         panel.add(scrollPane, BorderLayout.CENTER);
+
+//        // Etiqueta de título
+//        JLabel titulo = new JLabel("Plantilla Completa", SwingConstants.CENTER);
+//        titulo.setFont(new Font("Segoe UI", Font.BOLD, 18));
+//        titulo.setForeground(Color.WHITE);
+//        titulo.setBorder(BorderFactory.createEmptyBorder(15, 0, 15, 0));
+//        panel.add(titulo, BorderLayout.NORTH);
+
+        // 3. Panel para mostrar el Valor Total
+        JPanel panelValorTotal = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        panelValorTotal.setBackground(new Color(18, 18, 18)); // Un gris un poco más claro para destacar
+        panelValorTotal.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+
+        JLabel lblValorTotal = new JLabel(
+            "Valor del Equipo: " + String.format("%,d", valorTotal) + " €"
+        );
+        lblValorTotal.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblValorTotal.setForeground(new Color(255, 255, 255)); // Verde claro para destacar el dinero
+
+        panelValorTotal.add(lblValorTotal);
         
-        // Etiqueta de título
-        JLabel titulo = new JLabel("Plantilla Completa", SwingConstants.CENTER);
-        titulo.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        titulo.setForeground(Color.WHITE);
-        titulo.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
-        panel.add(titulo, BorderLayout.NORTH);
+        // Añadir el nuevo panel al sur (SOUTH) del panel principal
+        panel.add(panelValorTotal, BorderLayout.SOUTH);
 
         return panel;
     }
 
     // -------------------------------------------------------------
-    // MÉTODOS EXISTENTES (Pequeños ajustes para coherencia y Tooltip)
+    // RESTO DE MÉTODOS SIN CAMBIOS
     // -------------------------------------------------------------
-
+    
     /** Crear label de jugador con listener */
     private JLabel crearLabelJugador(int index) {
         JLabel lbl = new JLabel("◻", SwingConstants.CENTER);
@@ -341,8 +375,8 @@ public class PanelEquipo extends JPanel {
                 .filter(j -> j.getPosicion() == titular.getPosicion())
                 .collect(Collectors.toList());
 
-        if (suplentesMismaPos.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No hay suplentes disponibles para " + titular.getPosicion());
+        if (titular.getId() == -1 || suplentesMismaPos.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No hay suplentes disponibles para esa posición o la casilla está vacía.");
             return;
         }
 
