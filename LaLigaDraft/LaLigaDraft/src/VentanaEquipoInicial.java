@@ -15,6 +15,7 @@ public class VentanaEquipoInicial extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
+        
         // Panel principal con 4 tablas
         JPanel mainPanel = new JPanel(new GridLayout(2, 2, 10, 10));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));

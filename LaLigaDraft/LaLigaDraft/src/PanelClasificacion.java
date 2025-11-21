@@ -66,6 +66,7 @@ public class PanelClasificacion extends JPanel {
         clasificacion.getTableHeader().setBackground(new Color(40, 40, 40));
         clasificacion.getTableHeader().setForeground(Color.WHITE);
         clasificacion.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
+        clasificacion.getTableHeader().setReorderingAllowed(false);
 
         // Renderer para centrar contenido
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
@@ -115,8 +116,6 @@ public class PanelClasificacion extends JPanel {
         }
     }
     
-    // NOTA: Si puntosUsuario era privado en Liga, necesitas esta función auxiliar 
-    // o hacer el método en Liga público.
     private int calcularPuntos(Usuario usuario) {
         int total = 0;
         for (int idJ : usuario.getJugadores()) {

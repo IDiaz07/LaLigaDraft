@@ -1,4 +1,6 @@
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
@@ -143,8 +145,14 @@ public class PanelEquipo extends JPanel {
                 j.getTotalPuntos()
             })
             .toArray(Object[][]::new);
+        DefaultTableModel modelo = new DefaultTableModel(datos, nombresColumnas) {
+        	@Override
+        	public boolean isCellEditable(int row, int column) {
+        		return false;
+        	}
+        };
 
-        JTable tablaPlantilla = new JTable(datos, nombresColumnas);
+        JTable tablaPlantilla = new JTable(modelo);
         
         // Estilización de la tabla (opcional)
         tablaPlantilla.setFont(new Font("Segoe UI", Font.PLAIN, 12));
@@ -153,7 +161,8 @@ public class PanelEquipo extends JPanel {
         tablaPlantilla.setForeground(Color.WHITE);
         tablaPlantilla.getTableHeader().setBackground(new Color(60, 60, 60));
         tablaPlantilla.getTableHeader().setForeground(Color.WHITE);
-        tablaPlantilla.setEnabled(false); // La tabla es solo para visualización
+        tablaPlantilla.getTableHeader().setReorderingAllowed(false);
+        //tablaPlantilla.setEnabled(false); // La tabla es solo para visualización
 
         JScrollPane scrollPane = new JScrollPane(tablaPlantilla);
         scrollPane.getViewport().setBackground(new Color(40, 40, 40));
