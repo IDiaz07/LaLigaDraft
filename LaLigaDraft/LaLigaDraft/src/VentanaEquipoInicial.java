@@ -1,8 +1,12 @@
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import java.awt.*;
-import java.util.*;
+import java.awt.BorderLayout;
+import java.awt.Font;
+import java.awt.GridLayout;
+import javax.swing.*;
 import java.util.List;
+import java.util.ArrayList;
+
 
 public class VentanaEquipoInicial extends JFrame {
 
@@ -15,12 +19,10 @@ public class VentanaEquipoInicial extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
-        
-        // Panel principal con 4 tablas
+        // Panel principal con 4 filas (una por posición)
         JPanel mainPanel = new JPanel(new GridLayout(4, 1, 10, 10));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Crear cada tabla
         mainPanel.add(crearTablaPorPosicion("Porteros", Posicion.POR));
         mainPanel.add(crearTablaPorPosicion("Defensas", Posicion.DEF));
         mainPanel.add(crearTablaPorPosicion("Mediocentros", Posicion.MED));
@@ -29,12 +31,12 @@ public class VentanaEquipoInicial extends JFrame {
         JButton btnContinuar = new JButton("Continuar");
         btnContinuar.addActionListener(e -> dispose());
 
-        add(new JScrollPane(mainPanel), BorderLayout.CENTER);
-        add(btnContinuar, BorderLayout.SOUTH);
+        getContentPane().setLayout(new BorderLayout());
+        getContentPane().add(mainPanel, BorderLayout.CENTER);
+        getContentPane().add(btnContinuar, BorderLayout.SOUTH);
     }
 
     private JPanel crearTablaPorPosicion(String titulo, Posicion pos) {
-        // Filtramos jugadores del usuario por esa posición
         List<Jugador> lista = new ArrayList<>();
         for (int idJ : usuario.getJugadores()) {
             Jugador j = GestorDatos.jugadores.get(idJ);
@@ -43,7 +45,6 @@ public class VentanaEquipoInicial extends JFrame {
             }
         }
 
-        // Modelo de tabla
         String[] columnas = {"Posición", "Nombre", "Equipo", "Valor Mercado", "Puntos Totales"};
         DefaultTableModel modelo = new DefaultTableModel(columnas, 0);
 
@@ -59,10 +60,9 @@ public class VentanaEquipoInicial extends JFrame {
 
         JTable tabla = new JTable(modelo);
         tabla.setEnabled(false);
-        JScrollPane scroll = new JScrollPane(tabla);
         tabla.getTableHeader().setReorderingAllowed(false);
+        JScrollPane scroll = new JScrollPane(tabla);
 
-        // Panel con título
         JPanel panel = new JPanel(new BorderLayout());
         JLabel label = new JLabel(titulo, SwingConstants.CENTER);
         label.setFont(label.getFont().deriveFont(Font.BOLD, 16f));

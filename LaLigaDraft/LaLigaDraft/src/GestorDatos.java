@@ -73,6 +73,17 @@ public class GestorDatos {
                     FOREIGN KEY(liga_id) REFERENCES ligas(id)
                 );
             """);
+            
+            st.execute("""
+            	    CREATE TABLE IF NOT EXISTS usuarios_ligas (
+            	        usuario_id INTEGER,
+            	        liga_id INTEGER,
+            	        PRIMARY KEY(usuario_id, liga_id),
+            	        FOREIGN KEY(usuario_id) REFERENCES usuarios(id),
+            	        FOREIGN KEY(liga_id) REFERENCES ligas(id)
+            	    );
+            	""");
+
 
             System.out.println("[OK] Tablas creadas o existentes.");
 
@@ -176,13 +187,276 @@ public class GestorDatos {
     }
 
     // -------------------- GUARDAR DATOS --------------------
-    public static void guardarUsuarios() { /* igual que tu versión */ }
-    public static void guardarJugadores() { /* igual que tu versión */ }
-    public static void guardarLigas() { /* igual que tu versión */ }
+    public static Usuario registrarUsuario(String nombre, String email, String telefono, String contrasena, int saldoInicial) {
+        try (Connection conn = getConnection()) {
+
+            // 1. Obtener nuevo ID (máximo + 1)
+            int nuevoId = 1;
+            String sqlMaxId = "SELECT COALESCE(MAX(id),0)+1 AS nuevoId FROM usuarios";
+            try (PreparedStatement ps = conn.prepareStatement(sqlMaxId);
+                 ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) nuevoId = rs.getInt("nuevoId");
+            }
+
+            // 2. Crear el usuario con tu constructor actual
+            Usuario nuevo = new Usuario(nuevoId, nombre, email, telefono, contrasena, saldoInicial);
+
+            // 3. Insertar en la BD
+            String sqlInsert = """
+                INSERT INTO usuarios (id, nombre, email, telefono, contrasena, saldo, equipoMostrado, ligaActualId)
+                VALUES (?, ?, ?, ?, ?, ?, ?, NULL)
+            """;
+
+            try (PreparedStatement ps = conn.prepareStatement(sqlInsert)) {
+                ps.setInt(1, nuevo.getId());
+                ps.setString(2, nuevo.getNombre());
+                ps.setString(3, nuevo.getEmail());
+                ps.setString(4, nuevo.getTelefono());
+                ps.setString(5, nuevo.getContrasena());
+                ps.setInt(6, nuevo.getSaldo());
+                ps.setBoolean(7, nuevo.isEquipoMostrado());
+                ps.executeUpdate();
+            }
+
+            // 4. Guardarlo en memoria
+            usuarios.put(nuevo.getId(), nuevo);
+
+            System.out.println("✅ Usuario registrado correctamente: " + nombre);
+            return nuevo;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    
+    public static void guardarUsuarios() {
+        String sql = """
+            UPDATE usuarios
+            SET nombre = ?, email = ?, telefono = ?, contrasena = ?,
+                saldo = ?, equipoMostrado = ?, ligaActualId = ?
+            WHERE id = ?
+        """;
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            for (Usuario u : usuarios.values()) {
+                ps.setString(1, u.getNombre());
+                ps.setString(2, u.getEmail());
+                ps.setString(3, u.getTelefono());
+                ps.setString(4, u.getContrasena());
+                ps.setInt(5, u.getSaldo());
+                ps.setBoolean(6, u.isEquipoMostrado());
+                ps.setInt(7, u.getLigaActualId());
+                ps.setInt(8, u.getId());
+                ps.executeUpdate();
+            }
+
+            System.out.println("Usuarios guardados correctamente en BD.");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public static void guardarJugadores() {
+        String sql = """
+            INSERT OR REPLACE INTO jugadores (
+                id, nombre, equipo, edad, nacionalidad, numeroCamiseta,
+                valorMercado, valorInicial, estado, posicion,
+                goles, asistencias, tarjetasAmarillas, tarjetasRojas,
+                puntosPorJornada
+            )
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        """;
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            for (Jugador j : jugadores.values()) {
+
+                ps.setInt(1, j.getId());
+                ps.setString(2, j.getNombre());
+                ps.setString(3, j.getEquipo());
+                ps.setInt(4, j.getEdad());
+                ps.setString(5, j.getNacionalidad());
+                ps.setInt(6, j.getNumeroCamiseta());
+
+                ps.setInt(7, j.getValorMercado());
+                ps.setInt(8, j.getValorInicial());
+                ps.setString(9, j.getEstado().name());
+                ps.setString(10, j.getPosicion().name());
+
+                ps.setInt(11, j.getGoles());
+                ps.setInt(12, j.getAsistencias());
+                ps.setInt(13, j.getTarjetasAmarillas());
+                ps.setInt(14, j.getTarjetasRojas());
+
+                // Convertir puntosPorJornada → CSV
+                StringBuilder sb = new StringBuilder();
+                Integer[] puntos = j.getPuntosPorJornada();
+                for (int i = 0; i < puntos.length; i++) {
+                    if (i > 0) sb.append(",");
+                    sb.append(puntos[i] == null ? "null" : puntos[i]);
+                }
+                ps.setString(15, sb.toString());
+
+                ps.executeUpdate();
+            }
+
+            System.out.println("✅ Jugadores guardados correctamente en la base de datos.");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void guardarLigas() {
+        String sql = """
+            INSERT OR REPLACE INTO ligas (
+                id, nombre, publica, codigoInvitacion, ultimaActualizacionMercado
+            )
+            VALUES (?,?,?,?,?)
+        """;
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            for (Liga l : ligas.values()) {
+
+                ps.setInt(1, l.getId());
+                ps.setString(2, l.getNombre());
+                ps.setBoolean(3, l.isPublica());
+                ps.setString(4, l.getCodigoInvitacion());
+                ps.setLong(5, l.getUltimaActualizacionMercado());
+
+                ps.executeUpdate();
+            }
+
+            System.out.println("✅ Ligas guardadas correctamente en la base de datos.");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static Liga buscarLigaPublicaDisponible() {
+        for (Liga l : ligas.values()) {
+            if (l.isPublica()) {
+                return l;
+            }
+        }
+        return null;
+    }
+    
+    public static Liga registrarLiga(String nombre, boolean publica, String codigo) {
+        String sql = """
+            INSERT INTO ligas (nombre, publica, codigoInvitacion, ultimaActualizacionMercado)
+            VALUES (?, ?, ?, ?)
+        """;
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            long ahora = System.currentTimeMillis();
+
+            ps.setString(1, nombre);
+            ps.setBoolean(2, publica);
+            ps.setString(3, codigo);
+            ps.setLong(4, ahora);
+
+            ps.executeUpdate();
+
+            // Obtener ID generado
+            ResultSet rs = ps.getGeneratedKeys();
+            if (rs.next()) {
+                int id = rs.getInt(1);
+
+                Liga liga = new Liga(id, nombre, publica, codigo);
+                liga.setUltimaActualizacionMercado(ahora);
+
+                ligas.put(id, liga);
+
+                return liga;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
+    public static void agregarUsuarioALiga(int userId, int ligaId) {
+        String sql = "INSERT OR IGNORE INTO usuarios_ligas (usuarioId, ligaId) VALUES (?, ?)";
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+            ps.setInt(2, ligaId);
+            ps.executeUpdate();
+
+            // Actualizar en memoria
+            Usuario u = usuarios.get(userId);
+            Liga l = ligas.get(ligaId);
+
+            if (u != null && l != null) {
+                if (!u.getLigas().contains(l)) u.getLigas().add(l.getId());
+                if (!l.getUsuariosIds().contains(u)) l.getUsuariosIds().add(u.getId());
+            }
+           
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     // -------------------- ASIGNAR JUGADORES A USUARIOS --------------------
-    public static void asignarUsuariosJugadores() { /* igual que tu versión */ }
-    public static void asignarEquipoInicial(Usuario usuario) { /* igual que tu versión */ }
+    public static void asignarUsuariosJugadores() {
+        for (Usuario usuario : usuarios.values()) { // suponiendo que tienes un Map<Integer, Usuario> usuarios
+            if (usuario.getJugadores() == null || usuario.getJugadores().isEmpty()) {
+                asignarEquipoInicial(usuario); // reutilizamos la función que crea 15 jugadores
+            }
+        }
+    }
+
+    public static void asignarEquipoInicial(Usuario usuario) {
+        List<Integer> listaIds = new ArrayList<>();
+
+        // Filtrar jugadores existentes por posición
+        List<Jugador> porteros = new ArrayList<>();
+        List<Jugador> defensas = new ArrayList<>();
+        List<Jugador> mediocentros = new ArrayList<>();
+        List<Jugador> delanteros = new ArrayList<>();
+
+        for (Jugador j : jugadores.values()) {
+            switch (j.getPosicion()) {
+                case POR -> porteros.add(j);
+                case DEF -> defensas.add(j);
+                case MED -> mediocentros.add(j);
+                case DEL -> delanteros.add(j);
+            }
+        }
+
+        // Tomar jugadores según el número que necesitamos
+        int count;
+        count = Math.min(2, porteros.size());
+        for (int i = 0; i < count; i++) listaIds.add(porteros.get(i).getId());
+
+        count = Math.min(5, defensas.size());
+        for (int i = 0; i < count; i++) listaIds.add(defensas.get(i).getId());
+
+        count = Math.min(5, mediocentros.size());
+        for (int i = 0; i < count; i++) listaIds.add(mediocentros.get(i).getId());
+
+        count = Math.min(3, delanteros.size());
+        for (int i = 0; i < count; i++) listaIds.add(delanteros.get(i).getId());
+
+        usuario.setJugadores(listaIds);
+    }
+
+
 
     // -------------------- CARGAR TODO --------------------
     public static void cargarTodo() {

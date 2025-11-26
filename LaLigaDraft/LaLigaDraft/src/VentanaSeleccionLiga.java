@@ -1,9 +1,9 @@
 import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
 import java.util.*;
 
 public class VentanaSeleccionLiga extends JFrame {
+
     private final Usuario usuario;
 
     public VentanaSeleccionLiga(Usuario usuario) {
@@ -41,11 +41,7 @@ public class VentanaSeleccionLiga extends JFrame {
         btnPublica.addActionListener(e -> unirseALigaPublica());
         btnPrivada.addActionListener(e -> crearLigaPrivada());
         btnUnirseCodigo.addActionListener(e -> unirseConCodigo());
-        btnSalir.addActionListener(e -> {
-            dispose();
-            // Asumiendo que VentanaInicio existe
-            // SwingUtilities.invokeLater(() -> new VentanaInicio().setVisible(true)); 
-        });
+        btnSalir.addActionListener(e -> dispose());
     }
 
     // ------------------- LIGA PÚBLICA -------------------
@@ -55,12 +51,16 @@ public class VentanaSeleccionLiga extends JFrame {
             liga = GestorDatos.registrarLiga("Liga Pública", true, null);
         }
         GestorDatos.agregarUsuarioALiga(usuario.getId(), liga.getId());
-        JOptionPane.showMessageDialog(this, "Te uniste a: " + liga.getNombre());
-        
-        // CAMBIO: Establecer liga actual y guardar
-        usuario.setLigaActualId(liga.getId()); 
-        GestorDatos.guardarUsuarios(); 
+        usuario.setLigaActualId(liga.getId());
 
+        // 🔹 Asignar equipo inicial si no tiene jugadores
+        if (usuario.getJugadores() == null || usuario.getJugadores().isEmpty()) {
+            GestorDatos.asignarEquipoInicial(usuario);
+            VentanaEquipoInicial ve = new VentanaEquipoInicial(usuario);
+            ve.setVisible(true);
+        }
+
+        GestorDatos.guardarUsuarios();
         abrirPrincipal();
     }
 
@@ -76,23 +76,28 @@ public class VentanaSeleccionLiga extends JFrame {
 
         int ok = JOptionPane.showConfirmDialog(this, form, "Crear liga privada",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        if (ok == JOptionPane.OK_OPTION) {
-            String nom = nombre.getText().trim();
-            String cod = codigo.getText().trim();
-            if (nom.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "El nombre no puede estar vacío.");
-                return;
-            }
-            Liga liga = GestorDatos.registrarLiga(nom, false, cod.isEmpty() ? null : cod);
-            GestorDatos.agregarUsuarioALiga(usuario.getId(), liga.getId());
-            JOptionPane.showMessageDialog(this, "Liga creada: " + liga.getNombre());
-            
-            // CAMBIO: Establecer liga actual y guardar
-            usuario.setLigaActualId(liga.getId());
-            GestorDatos.guardarUsuarios();
+        if (ok != JOptionPane.OK_OPTION) return;
 
-            abrirPrincipal();
+        String nom = nombre.getText().trim();
+        String cod = codigo.getText().trim();
+        if (nom.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "El nombre no puede estar vacío.");
+            return;
         }
+
+        Liga liga = GestorDatos.registrarLiga(nom, false, cod.isEmpty() ? null : cod);
+        GestorDatos.agregarUsuarioALiga(usuario.getId(), liga.getId());
+        usuario.setLigaActualId(liga.getId());
+
+        // 🔹 Asignar equipo inicial si no tiene jugadores
+        if (usuario.getJugadores() == null || usuario.getJugadores().isEmpty()) {
+            GestorDatos.asignarEquipoInicial(usuario);
+            VentanaEquipoInicial ve = new VentanaEquipoInicial(usuario);
+            ve.setVisible(true);
+        }
+
+        GestorDatos.guardarUsuarios();
+        abrirPrincipal();
     }
 
     // ------------------- UNIRSE POR CÓDIGO -------------------
@@ -105,53 +110,49 @@ public class VentanaSeleccionLiga extends JFrame {
             JOptionPane.showMessageDialog(this, "Debes introducir un código válido.");
             return;
         }
-
         final String codigo = codigoInput.trim();
 
-        // Buscar liga privada con ese código
         Liga liga = GestorDatos.ligas.values().stream()
                 .filter(l -> !l.isPublica() && codigo.equals(l.getCodigoInvitacion()))
-                .findFirst()
-                .orElse(null);
+                .findFirst().orElse(null);
 
         if (liga == null) {
             int crear = JOptionPane.showConfirmDialog(this,
                     "No se encontró ninguna liga con ese código.\n¿Deseas crear una nueva con ese código?",
                     "Liga no encontrada", JOptionPane.YES_NO_OPTION);
+            if (crear != JOptionPane.YES_OPTION) return;
 
-            if (crear == JOptionPane.YES_OPTION) {
-                String nombre = JOptionPane.showInputDialog(this, "Nombre de la nueva liga:");
-                if (nombre != null && !nombre.trim().isEmpty()) {
-                    Liga nueva = GestorDatos.registrarLiga(nombre.trim(), false, codigo);
-                    GestorDatos.agregarUsuarioALiga(usuario.getId(), nueva.getId());
-                    
-                    // CORRECCIÓN A: Si se crea la liga, usar el nombre de la nueva liga.
-                    JOptionPane.showMessageDialog(this, 
-                                                  "Se creó y te uniste a: " + nueva.getNombre(),
-                                                  "¡Liga privada creada!",
-                                                  JOptionPane.INFORMATION_MESSAGE);
-                    
-                    usuario.setLigaActualId(nueva.getId());
-                    GestorDatos.guardarUsuarios();
-                    
-                    abrirPrincipal();
-                }
+            String nombre = JOptionPane.showInputDialog(this, "Nombre de la nueva liga:");
+            if (nombre == null || nombre.trim().isEmpty()) return;
+
+            Liga nueva = GestorDatos.registrarLiga(nombre.trim(), false, codigo);
+            GestorDatos.agregarUsuarioALiga(usuario.getId(), nueva.getId());
+            usuario.setLigaActualId(nueva.getId());
+
+            // 🔹 Asignar equipo inicial si no tiene jugadores
+            if (usuario.getJugadores() == null || usuario.getJugadores().isEmpty()) {
+                GestorDatos.asignarEquipoInicial(usuario);
+                VentanaEquipoInicial ve = new VentanaEquipoInicial(usuario);
+                ve.setVisible(true);
             }
+
+            GestorDatos.guardarUsuarios();
+            abrirPrincipal();
             return;
         }
 
         // Ya existe -> unir al usuario
         GestorDatos.agregarUsuarioALiga(usuario.getId(), liga.getId());
-        
-        // CORRECCIÓN B: Si se une a una liga existente, usar el nombre de la liga encontrada.
-        JOptionPane.showMessageDialog(this, 
-                                      "Te uniste correctamente a: " + liga.getNombre(),
-                                      "¡Unido a liga privada!", 
-                                      JOptionPane.INFORMATION_MESSAGE);
-        
         usuario.setLigaActualId(liga.getId());
-        GestorDatos.guardarUsuarios();
 
+        // 🔹 Asignar equipo inicial si no tiene jugadores
+        if (usuario.getJugadores() == null || usuario.getJugadores().isEmpty()) {
+            GestorDatos.asignarEquipoInicial(usuario);
+            VentanaEquipoInicial ve = new VentanaEquipoInicial(usuario);
+            ve.setVisible(true);
+        }
+
+        GestorDatos.guardarUsuarios();
         abrirPrincipal();
     }
 

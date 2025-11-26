@@ -67,6 +67,7 @@ public class Liga {
         mercado.addAll(nuevosJugadores);
         ultimaActualizacionMercado = System.currentTimeMillis();
     }
+    
 
     public List<Usuario> getClasificacion() {
         List<Usuario> lista = new ArrayList<>();

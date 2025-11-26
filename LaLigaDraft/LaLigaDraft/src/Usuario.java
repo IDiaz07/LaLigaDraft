@@ -45,6 +45,8 @@ public class Usuario {
     public void addJugador(int idJugador) { jugadores.add(idJugador); }
     public void addLiga(int idLiga) { ligas.add(idLiga); }
     public void setEquipoMostrado(boolean equipoMostrado) { this.equipoMostrado = equipoMostrado; }
+    public void setJugadores(List<Integer> jugadores) { this.jugadores = jugadores; }
+
 
     // Exportar a línea (compatible Java 8/11) - ¡MODIFICADO!
     public String toFileString() {
