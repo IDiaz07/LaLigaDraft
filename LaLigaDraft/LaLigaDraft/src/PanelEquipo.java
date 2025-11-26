@@ -317,9 +317,7 @@ public class PanelEquipo extends JPanel {
         mostrarJugadoresEnCampo(formacion);
     }
 
-    private Jugador jugadorPlaceholder(Posicion pos) {
-        return new Jugador(-1, "Vacante " + pos, "", 0, "", 0, 0, Estado.SANO, pos, usuario.getId());
-    }
+    private Jugador jugadorPlaceholder(Posicion pos) { return new Jugador(-1, "Vacante " + pos, "", 0, "", 0, 0, Estado.SANO, pos); }
 
     private void mostrarJugadoresEnCampo(String formacion) {
         int w = campo.getWidth() > 0 ? campo.getWidth() : 400;

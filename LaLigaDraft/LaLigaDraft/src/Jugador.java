@@ -9,8 +9,7 @@ public class Jugador {
     private int valorMercado;
     private int valorInicial;
     private Estado estado;       // 🔹 en vez de String salud
-    private Posicion posicion;
-    private int propietario;     
+    private Posicion posicion;  
     private Integer[] puntosPorJornada;
 
     // Estadísticas adicionales
@@ -20,7 +19,7 @@ public class Jugador {
     private int tarjetasRojas;
 
     public Jugador(int id, String nombre, String equipo, int edad, String nacionalidad, int numeroCamiseta,
-                   int valorMercado, Estado estado, Posicion posicion, int propietario) {
+                   int valorMercado, Estado estado, Posicion posicion) {
         this.id = id;
         this.nombre = nombre;
         this.equipo = equipo;
@@ -32,7 +31,6 @@ public class Jugador {
         this.valorInicial = valorMercado;
         this.estado = estado;
         this.posicion = posicion;
-        this.propietario = propietario;
 
         this.puntosPorJornada = new Integer[32];
         this.goles = 0;
@@ -52,7 +50,6 @@ public class Jugador {
     public int getValorInicial() { return valorInicial; }
     public Estado getEstado() { return estado; }
     public Posicion getPosicion() { return posicion; }
-    public int getPropietario() { return propietario; }
     public Integer[] getPuntosPorJornada() { return puntosPorJornada; }
     public int getGoles() { return goles; }
     public int getAsistencias() { return asistencias; }
@@ -62,11 +59,14 @@ public class Jugador {
     // ----------------- SETTERS -----------------
     public void setValorMercado(int valor) { this.valorMercado = valor; }
     public void setEstado(Estado estado) { this.estado = estado; }
-    public void setPropietario(int propietario) { this.propietario = propietario; }
     public void addGol() { this.goles++; }
     public void addAsistencia() { this.asistencias++; }
     public void addTarjetaAmarilla() { this.tarjetasAmarillas++; }
     public void addTarjetaRoja() { this.tarjetasRojas++; }
+    public void setGoles(int goles) { this.goles = goles; }
+    public void setAsistencias(int asistencias) { this.asistencias = asistencias; }
+    public void setTarjetasAmarillas(int tA) { this.tarjetasAmarillas = tA; }
+    public void setTarjetasRojas(int tR) { this.tarjetasRojas = tR; }
 
     // ----------------- LÓGICA -----------------
     public void setPuntosEnJornada(int jornada, Integer puntos) {
@@ -95,7 +95,6 @@ public class Jugador {
           .append(valorInicial).append(";")
           .append(estado).append(";") // 🔹 exportamos enum como texto
           .append(posicion).append(";")
-          .append(propietario).append(";")
           .append(goles).append(";")
           .append(asistencias).append(";")
           .append(tarjetasAmarillas).append(";")
@@ -128,7 +127,7 @@ public class Jugador {
         int amarillas = Integer.parseInt(partes[13]);
         int rojas = Integer.parseInt(partes[14]);
 
-        Jugador j = new Jugador(id, nombre, equipo, edad, nacionalidad, numeroCamiseta, valorMercado, estado, pos, propietario);
+        Jugador j = new Jugador(id, nombre, equipo, edad, nacionalidad, numeroCamiseta, valorMercado, estado, pos);
         j.valorInicial = valorInicial;
         j.goles = goles;
         j.asistencias = asistencias;
