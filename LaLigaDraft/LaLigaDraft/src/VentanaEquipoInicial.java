@@ -15,7 +15,7 @@ public class VentanaEquipoInicial extends JFrame {
     public VentanaEquipoInicial(Usuario usuario) {
         this.usuario = usuario;
         setTitle("Tu equipo inicial - " + usuario.getNombre());
-        setSize(800, 600);
+        setSize(400, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 

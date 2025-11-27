@@ -1,4 +1,5 @@
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -22,20 +23,28 @@ public class VentanaInicio extends JFrame {
         // Panel principal
         JPanel panelPrincipal = new JPanel();
         panelPrincipal.setLayout(new BorderLayout());
+        panelPrincipal.setBackground(new Color(18, 18, 18));
 
         // Etiqueta de bienvenida
         JLabel labelBienvenida = new JLabel("¡BIENVENIDO A LALIGADRAFT!", SwingConstants.CENTER);
         labelBienvenida.setFont(new Font("Arial", Font.BOLD, 20));
+        labelBienvenida.setForeground(Color.WHITE);
         labelBienvenida.setBorder(BorderFactory.createEmptyBorder(40, 10, 40, 10));
         panelPrincipal.add(labelBienvenida, BorderLayout.NORTH);
 
         // Panel para los botones
         JPanel panelBotones = new JPanel();
         panelBotones.setLayout(new GridLayout(1, 2, 20, 20));
+        panelBotones.setBackground(new Color(18, 18, 18));
         panelBotones.setBorder(BorderFactory.createEmptyBorder(325, 50, 100, 50));
 
         JButton botonIniciarSesion = new JButton("Iniciar Sesión");
+        botonIniciarSesion.setBackground(new Color(231, 76, 60));
+        botonIniciarSesion.setForeground(Color.WHITE);
+        
         JButton botonRegistrarme = new JButton("Registrarme");
+        botonRegistrarme.setBackground(new Color(231, 76, 60));
+        botonRegistrarme.setForeground(Color.WHITE);
 
         panelBotones.add(botonIniciarSesion);
         panelBotones.add(botonRegistrarme);
