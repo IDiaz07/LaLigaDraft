@@ -65,6 +65,7 @@ public class VentanaSeleccionLiga extends JFrame {
     }
 
     // ------------------- CREAR LIGA PRIVADA -------------------
+ // ------------------- CREAR LIGA PRIVADA -------------------
     private void crearLigaPrivada() {
         JTextField nombre = new JTextField();
         JTextField codigo = new JTextField();
@@ -85,7 +86,30 @@ public class VentanaSeleccionLiga extends JFrame {
             return;
         }
 
+        // 🔹 Verificar si ya existe una liga con el mismo nombre y código
+        boolean existe = GestorDatos.ligas.values().stream()
+                .anyMatch(l -> !l.isPublica() &&
+                        l.getNombre().equalsIgnoreCase(nom) &&
+                        Objects.equals(l.getCodigoInvitacion(), cod.isEmpty() ? null : cod));
+
+        if (existe) {
+            JOptionPane.showMessageDialog(this,
+                    "Ya existe una liga privada con ese nombre y código. Elige otro nombre o código.",
+                    "Error al crear liga",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Crear la liga
         Liga liga = GestorDatos.registrarLiga(nom, false, cod.isEmpty() ? null : cod);
+        if (liga == null) {
+            JOptionPane.showMessageDialog(this,
+                    "No se pudo crear la liga. Intenta nuevamente.",
+                    "Error al crear liga",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
         GestorDatos.agregarUsuarioALiga(usuario.getId(), liga.getId());
         usuario.setLigaActualId(liga.getId());
 

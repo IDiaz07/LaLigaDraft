@@ -3,30 +3,21 @@ import java.awt.*;
 
 public class VentanaPrincipal extends JFrame {
 
-	private final Usuario usuario;
+    private final Usuario usuario;
     private CardLayout cardLayout;
     private JPanel panelContenido;
-    private JLabel labelSaldo;
-    private JPanel panelSaldo;
-    // El saldo inicial debe ser dinámico, usamos el del usuario (aunque la variable saldo
-    // de la ventana es redundante si se usa siempre usuario.getSaldo())
-    private int saldo = 500000; 
 
     public VentanaPrincipal(Usuario usuario) {
-    	this.usuario = usuario;
-        
-        // OBTENER LA LIGA ACTUAL (si no hay liga, será null)
+        this.usuario = usuario;
+
+        // Obtener la liga actual
         Liga ligaActual = GestorDatos.ligas.get(usuario.getLigaActualId());
-    	
-    	setTitle("Liga Fantasy");
+
+        setTitle("Liga Fantasy");
         setSize(400, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setResizable(false);
-        
-        if (usuario.getSaldo() > 0) { // Sincronizar saldo de la ventana con el del usuario
-            this.saldo = usuario.getSaldo();
-        }
 
         // ====== Panel central con CardLayout ======
         cardLayout = new CardLayout();
@@ -35,14 +26,14 @@ public class VentanaPrincipal extends JFrame {
 
         String[] secciones = {"Mis Ligas", "Clasificacion", "Equipo", "Mercado", "Actividad"};
 
-        // Crear secciones normales
+        // Crear secciones normales (excepto Equipo, Clasificacion y Mercado)
         for (String s : secciones) {
             if (!s.equals("Equipo") && !s.equals("Clasificacion") && !s.equals("Mercado")) {
                 panelContenido.add(crearPanel(s), s);
             }
         }
 
-        // Panel "Equipo" (sin cambios)
+        // Panel "Equipo"
         try {
             PanelEquipo panelEquipo = new PanelEquipo(usuario);
             JPanel panelContenedorEquipo = new JPanel(new BorderLayout());
@@ -52,59 +43,25 @@ public class VentanaPrincipal extends JFrame {
             panelContenido.add(crearPanel("Equipo"), "Equipo");
         }
 
-        // Panel "Clasificación" - ¡MODIFICADO!
+        // Panel "Clasificación"
         try {
-            // Pasamos la ligaActual al constructor
-            PanelClasificacion panelClasificacion = new PanelClasificacion(ligaActual); 
+            if (ligaActual != null) {
+                GestorDatos.cargarUsuariosLiga(ligaActual);
+            }
+            PanelClasificacion panelClasificacion = new PanelClasificacion(ligaActual);
             JPanel panelContenedorClasificacion = new JPanel(new BorderLayout());
             panelContenedorClasificacion.setBackground(new Color(18, 18, 18));
             panelClasificacion.setBackground(new Color(18, 18, 18));
             panelContenedorClasificacion.add(panelClasificacion, BorderLayout.CENTER);
             panelContenido.add(panelContenedorClasificacion, "Clasificacion");
         } catch (Throwable t) {
-        	JPanel panelClasificacion = crearPanel("Clasificacion - Error: " + t.getMessage());
+            JPanel panelClasificacion = crearPanel("Clasificacion - Error: " + t.getMessage());
             panelClasificacion.setBackground(new Color(18, 18, 18));
             panelContenido.add(panelClasificacion, "Clasificacion");
         }
 
-        // Panel "Mercado" con barra de búsqueda + saldo (sin cambios en la lógica que pasaste)
-        JPanel panelMercado = new JPanel(new BorderLayout());
-        panelMercado.setBackground(new Color(18, 18, 18));
-
-        // Barra de búsqueda
-        JPanel barraBusqueda = new JPanel(new BorderLayout());
-        barraBusqueda.setBackground(new Color(28, 28, 28));
-        barraBusqueda.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-
-        JTextField campoBusqueda = new JTextField();
-        campoBusqueda.setPreferredSize(new Dimension(200, 34));
-        campoBusqueda.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-        campoBusqueda.setBackground(new Color(40, 40, 40));
-        campoBusqueda.setForeground(Color.WHITE);
-
-        JButton botonBuscar = new JButton("🔍");
-        botonBuscar.setBackground(new Color(231, 76, 60));
-        botonBuscar.setForeground(Color.WHITE);
-        botonBuscar.setFocusPainted(false);
-        botonBuscar.setBorderPainted(false);
-
-        barraBusqueda.add(campoBusqueda, BorderLayout.CENTER);
-        barraBusqueda.add(botonBuscar, BorderLayout.EAST);
-
-        panelMercado.add(barraBusqueda, BorderLayout.NORTH);
-
-        // Panel de saldo en esquina inferior derecha (oculto por defecto)
-        panelSaldo = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        panelSaldo.setBackground(new Color(18, 18, 18));
-        labelSaldo = new JLabel("Saldo: " + saldo + " €");
-        labelSaldo.setForeground(Color.WHITE);
-        labelSaldo.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        panelSaldo.add(labelSaldo);
-        panelSaldo.setVisible(false);
-
-        // Añadimos el panel de saldo al sur del Mercado
-        panelMercado.add(panelSaldo, BorderLayout.SOUTH);
-
+        // Panel "Mercado"
+        PanelMercado panelMercado = new PanelMercado(usuario.getSaldo(usuario.getLigaActualId()));
         panelContenido.add(panelMercado, "Mercado");
 
         // ====== Barra de navegación inferior ======
@@ -124,11 +81,12 @@ public class VentanaPrincipal extends JFrame {
             boton.addActionListener((e) -> {
                 cardLayout.show(panelContenido, s);
 
-                // Mostrar saldo solo en "Mercado"
+                // Mostrar saldo solo en "Mercado" y actualizar con el saldo de la liga actual
                 if ("Mercado".equals(s)) {
-                    panelSaldo.setVisible(true);
+                    panelMercado.setSaldo(usuario.getSaldo(usuario.getLigaActualId()));
+                    panelMercado.mostrarSaldo(true);
                 } else {
-                    panelSaldo.setVisible(false);
+                    panelMercado.mostrarSaldo(false);
                 }
             });
 
@@ -141,16 +99,15 @@ public class VentanaPrincipal extends JFrame {
         add(panelMenu, BorderLayout.SOUTH);
 
         cardLayout.show(panelContenido, "Mis Ligas");
-   
+
+        // Abrir ventana de equipo inicial si el usuario no tiene jugadores
         if (usuario.getJugadores() != null && usuario.getJugadores().size() == 15) {
-            // Se asume que 15 jugadores es el equipo inicial asignado
             SwingUtilities.invokeLater(() -> {
                 VentanaEquipoInicial ve = new VentanaEquipoInicial(usuario);
                 ve.setVisible(true);
             });
         }
     }
-   
 
     private JPanel crearPanel(String texto) {
         JPanel panel = new JPanel(new BorderLayout());

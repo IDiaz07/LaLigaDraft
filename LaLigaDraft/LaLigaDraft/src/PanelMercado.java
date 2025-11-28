@@ -1,46 +1,71 @@
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
-
-import javax.swing.JButton;
-import javax.swing.JPanel;
+import javax.swing.*;
+import java.awt.*;
+import java.text.DecimalFormat;
 
 public class PanelMercado extends JPanel {
 
-    public PanelMercado() {
-        // Usar BorderLayout en este panel
+    private JLabel labelSaldo;
+    private JPanel panelSaldo; // ahora es atributo de la clase
+    private int saldo; // saldo inicial
+
+    public PanelMercado(int saldoInicial) {
+        this.saldo = saldoInicial;
         setLayout(new BorderLayout());
+        setBackground(new Color(18, 18, 18));
 
-        // Panel superior con botones principales
-        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        // Barra de búsqueda
+        JPanel barraBusqueda = new JPanel(new BorderLayout());
+        barraBusqueda.setBackground(new Color(28, 28, 28));
+        barraBusqueda.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
 
-        JButton btnMercado = new JButton("Mercado");
-        JButton btnOperaciones = new JButton("Mis operaciones");
-        JButton btnHistorico = new JButton("Histórico");
+        JTextField campoBusqueda = new JTextField();
+        campoBusqueda.setPreferredSize(new Dimension(200, 34));
+        campoBusqueda.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        campoBusqueda.setBackground(new Color(40, 40, 40));
+        campoBusqueda.setForeground(Color.WHITE);
 
-        // Panel para mostrar sub-botones de "Mis operaciones"
-        JPanel panelSubOperaciones = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        panelSubOperaciones.setVisible(false); // inicialmente oculto
+        JButton botonBuscar = new JButton("🔍");
+        botonBuscar.setBackground(new Color(231, 76, 60));
+        botonBuscar.setForeground(Color.WHITE);
+        botonBuscar.setFocusPainted(false);
+        botonBuscar.setBorderPainted(false);
 
-        JButton btnCompras = new JButton("Compras");
-        JButton btnVentas = new JButton("Ventas");
-        panelSubOperaciones.add(btnCompras);
-        panelSubOperaciones.add(btnVentas);
+        barraBusqueda.add(campoBusqueda, BorderLayout.CENTER);
+        barraBusqueda.add(botonBuscar, BorderLayout.EAST);
 
-        // Acción: mostrar/ocultar sub-botones al clickear "Mis operaciones"
-        btnOperaciones.addActionListener((ActionEvent e) -> {
-            panelSubOperaciones.setVisible(!panelSubOperaciones.isVisible());
-            revalidate();
-            repaint();
-        });
+        add(barraBusqueda, BorderLayout.NORTH);
 
-        // Añadir los tres botones principales
-        panelBotones.add(btnMercado);
-        panelBotones.add(btnOperaciones);
-        panelBotones.add(btnHistorico);
+        // Panel de saldo
+        panelSaldo = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        panelSaldo.setBackground(new Color(18, 18, 18));
+        labelSaldo = new JLabel();
+        labelSaldo.setForeground(Color.WHITE);
+        labelSaldo.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        panelSaldo.add(labelSaldo);
+        panelSaldo.setVisible(false); // oculto por defecto
 
-        // Añadir paneles al JPanel principal
-        add(panelBotones, BorderLayout.NORTH);
-        add(panelSubOperaciones, BorderLayout.CENTER);
+        add(panelSaldo, BorderLayout.SOUTH);
+
+        // Mostrar saldo inicial
+        actualizarLabelSaldo();
+    }
+
+    // Mostrar u ocultar saldo
+    public void mostrarSaldo(boolean mostrar) {
+        panelSaldo.setVisible(mostrar); // ahora se muestra/oculta el panel completo
+        revalidate();
+        repaint();
+    }
+
+    // Actualizar el saldo mostrado
+    public void setSaldo(int nuevoSaldo) {
+        this.saldo = nuevoSaldo;
+        actualizarLabelSaldo();
+    }
+
+    // Formatear el saldo con puntos
+    private void actualizarLabelSaldo() {
+        DecimalFormat df = new DecimalFormat("#,###");
+        labelSaldo.setText("Saldo: " + df.format(saldo) + " €");
     }
 }

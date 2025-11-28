@@ -62,54 +62,42 @@ public class VentanaIniciarSesion extends JFrame {
             String nombreUsuario = usuario.getText().trim();
             String pass = new String(contraseña.getPassword()).trim();
 
-            // Validación campos vacíos
-            if (nombreUsuario.isEmpty() || nombreUsuario.equals("Nombre de Usuario") ||
-                pass.isEmpty() || pass.equals("Contraseña")) {
-                JOptionPane.showMessageDialog(this, "Debes rellenar todos los campos",
-                        "Error", JOptionPane.WARNING_MESSAGE);
+            if (nombreUsuario.isEmpty() || pass.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Debes rellenar todos los campos");
                 return;
             }
 
-            // Buscar usuario en el diccionario
             Usuario usuarioEncontrado = GestorDatos.usuarios.values().stream()
                     .filter(u -> u.getNombre().equalsIgnoreCase(nombreUsuario))
                     .findFirst()
                     .orElse(null);
 
             if (usuarioEncontrado == null) {
-                JOptionPane.showMessageDialog(this, "El usuario no existe",
-                        "Error", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "El usuario no existe");
                 return;
             }
 
-            // Verificar contraseña
             if (!usuarioEncontrado.getContrasena().equals(pass)) {
-                JOptionPane.showMessageDialog(this, "Contraseña incorrecta",
-                        "Error", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Contraseña incorrecta");
                 return;
             }
-
-            // Login correcto
-            JOptionPane.showMessageDialog(this, "Bienvenido " + usuarioEncontrado.getNombre(),
-                    "Login correcto", JOptionPane.INFORMATION_MESSAGE);
 
             // 🔹 Asignar equipo inicial si no tiene jugadores
             GestorDatos.asignarEquipoInicial(usuarioEncontrado);
 
-            // Si es Admin1, va directo a la principal
-            if ("Admin1".equalsIgnoreCase(usuarioEncontrado.getNombre())) {
+            // 🔹 Determinar flujo según ligaActualId
+            if (usuarioEncontrado.getLigas() != null && !usuarioEncontrado.getLigas().isEmpty()) {
+                if (usuarioEncontrado.getLigaActualId() == -1) {
+                    // Asignar la primera liga que tenga
+                    usuarioEncontrado.setLigaActualId(usuarioEncontrado.getLigas().get(0));
+                }
+                // Abrir VentanaPrincipal directamente
                 dispose();
                 SwingUtilities.invokeLater(() -> new VentanaPrincipal(usuarioEncontrado).setVisible(true));
-                return;
-            }
-
-            // Si no tiene ligas -> abrir selector; si tiene -> principal
-            if (usuarioEncontrado.getLigas() == null || usuarioEncontrado.getLigas().isEmpty()) {
+            } else {
+                // No tiene ligas -> abrir selector
                 dispose();
                 SwingUtilities.invokeLater(() -> new VentanaSeleccionLiga(usuarioEncontrado).setVisible(true));
-            } else {
-                dispose();
-                SwingUtilities.invokeLater(() -> new VentanaPrincipal(usuarioEncontrado).setVisible(true));
             }
         });
 
