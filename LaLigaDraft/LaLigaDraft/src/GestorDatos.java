@@ -241,7 +241,7 @@ public class GestorDatos {
     public static Usuario registrarUsuario(String nombre, String email, String telefono, String contrasena, int saldoInicial) {
         try (Connection conn = getConnection()) {
 
-            // 1. Obtener nuevo ID (máximo + 1)
+            // 1. Obtener nuevo ID
             int nuevoId = 1;
             String sqlMaxId = "SELECT COALESCE(MAX(id),0)+1 AS nuevoId FROM usuarios";
             try (PreparedStatement ps = conn.prepareStatement(sqlMaxId);
@@ -249,10 +249,14 @@ public class GestorDatos {
                 if (rs.next()) nuevoId = rs.getInt("nuevoId");
             }
 
-            // 2. Crear el usuario con tu constructor actual
+            // 2. Crear usuario
             Usuario nuevo = new Usuario(nuevoId, nombre, email, telefono, contrasena);
+            
+            // IMPORTANTE: Le damos el saldo inicial para su liga actual (o una por defecto)
+            // Como no sabemos la liga aún, lo guardamos en el mapa temporalmente o usamos el saldoInicial
+            nuevo.actualizarSaldo(-1, saldoInicial); // -1 o el ID que quieras por defecto
 
-            // 3. Insertar en la BD
+            // 3. Insertar en BD
             String sqlInsert = """
                 INSERT INTO usuarios (id, nombre, email, telefono, contrasena, saldo, equipoMostrado, ligaActualId)
                 VALUES (?, ?, ?, ?, ?, ?, ?, NULL)
@@ -264,14 +268,15 @@ public class GestorDatos {
                 ps.setString(3, nuevo.getEmail());
                 ps.setString(4, nuevo.getTelefono());
                 ps.setString(5, nuevo.getContrasena());
-                ps.setInt(6, nuevo.getSaldo());
+                
+                ps.setInt(6, saldoInicial); 
+                // -----------------------
+                
                 ps.setBoolean(7, nuevo.isEquipoMostrado());
                 ps.executeUpdate();
             }
 
-            // 4. Guardarlo en memoria
             usuarios.put(nuevo.getId(), nuevo);
-
             System.out.println("✅ Usuario registrado correctamente: " + nombre);
             return nuevo;
 
@@ -297,13 +302,16 @@ public class GestorDatos {
                 ps.setString(2, u.getEmail());
                 ps.setString(3, u.getTelefono());
                 ps.setString(4, u.getContrasena());
-                ps.setInt(5, u.getSaldo());
+
+               
+                ps.setInt(5, u.getSaldo(u.getLigaActualId())); 
+                // -----------------------
+
                 ps.setBoolean(6, u.isEquipoMostrado());
                 ps.setInt(7, u.getLigaActualId());
                 ps.setInt(8, u.getId());
                 ps.executeUpdate();
             }
-
             System.out.println("Usuarios guardados correctamente en BD.");
 
         } catch (Exception e) {
@@ -604,4 +612,44 @@ public class GestorDatos {
         inicializar();
         System.out.println("✅ Base de datos cargada correctamente. Usuarios: " + usuarios.size());
     }
+    
+    public static boolean tramitarCompra(Usuario comprador, Jugador jugador, Liga liga) {
+       
+        int saldoActual = comprador.getSaldo(liga.getId()); 
+        // -----------------------
+
+        if (saldoActual < jugador.getValorMercado()) {
+            System.out.println("❌ No tienes suficiente dinero.");
+            return false;
+        }
+
+        int coste = jugador.getValorMercado();
+        
+        // Aquí también pasamos el ID de la liga
+        comprador.actualizarSaldo(liga.getId(), saldoActual - coste);
+
+        liga.getMercadoIds().remove(Integer.valueOf(jugador.getId()));
+        comprador.addJugador(jugador.getId());
+
+        System.out.println("✅ Compra realizada: " + jugador.getNombre());
+        return true;
+    }
+    
+
+    public static void rellenarMercadoSiVacio() {
+        for (Liga l : ligas.values()) {
+            if (l.getMercadoIds().isEmpty()) {
+                System.out.println("Rellenando mercado de liga " + l.getNombre() + "...");
+                int contador = 0;
+                for (Integer id : jugadores.keySet()) {
+                    // Añadimos jugadores al mercado para probar
+                    l.getMercadoIds().add(id);
+                    contador++;
+                    if (contador >= 10) break; 
+                }
+            }
+        }
+    }
+    
 }
+

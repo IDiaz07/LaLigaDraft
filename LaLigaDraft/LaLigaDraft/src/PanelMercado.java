@@ -1,71 +1,112 @@
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.Locale;
 
 public class PanelMercado extends JPanel {
 
+    private Usuario usuario;
+    private JTable tablaMercado;
+    private DefaultTableModel modeloTabla;
     private JLabel labelSaldo;
-    private JPanel panelSaldo; // ahora es atributo de la clase
-    private int saldo; // saldo inicial
+    private Liga ligaActual;
 
-    public PanelMercado(int saldoInicial) {
-        this.saldo = saldoInicial;
+    public PanelMercado(Usuario usuario) {
+        this.usuario = usuario;
+        
+        // Cargar liga actual
+        if (GestorDatos.ligas.containsKey(usuario.getLigaActualId())) {
+            this.ligaActual = GestorDatos.ligas.get(usuario.getLigaActualId());
+        }
+
         setLayout(new BorderLayout());
-        setBackground(new Color(18, 18, 18));
+        setBackground(new Color(240, 240, 240)); 
 
-        // Barra de búsqueda
-        JPanel barraBusqueda = new JPanel(new BorderLayout());
-        barraBusqueda.setBackground(new Color(28, 28, 28));
-        barraBusqueda.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        // Panel superior
+        JPanel panelInfo = new JPanel(new BorderLayout());
+        panelInfo.setBackground(Color.WHITE);
+        panelInfo.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        
+        JLabel titulo = new JLabel("MERCADO DE FICHAJES");
+        titulo.setFont(new Font("Arial", Font.BOLD, 18));
+        
+        int saldoVal = (ligaActual != null) ? usuario.getSaldo(ligaActual.getId()) : 0;
+        labelSaldo = new JLabel("Saldo: " + formatearDinero(saldoVal));
+        labelSaldo.setFont(new Font("Arial", Font.BOLD, 16));
+        labelSaldo.setForeground(new Color(0, 100, 0)); 
 
-        JTextField campoBusqueda = new JTextField();
-        campoBusqueda.setPreferredSize(new Dimension(200, 34));
-        campoBusqueda.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-        campoBusqueda.setBackground(new Color(40, 40, 40));
-        campoBusqueda.setForeground(Color.WHITE);
+        panelInfo.add(titulo, BorderLayout.WEST);
+        panelInfo.add(labelSaldo, BorderLayout.EAST);
+        add(panelInfo, BorderLayout.NORTH);
 
-        JButton botonBuscar = new JButton("🔍");
-        botonBuscar.setBackground(new Color(231, 76, 60));
-        botonBuscar.setForeground(Color.WHITE);
-        botonBuscar.setFocusPainted(false);
-        botonBuscar.setBorderPainted(false);
+        // Tabla
+        String[] columnas = {"Pos", "Nombre", "Equipo", "Puntos", "Valor Mercado (€)"};
+        modeloTabla = new DefaultTableModel(columnas, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
 
-        barraBusqueda.add(campoBusqueda, BorderLayout.CENTER);
-        barraBusqueda.add(botonBuscar, BorderLayout.EAST);
+        tablaMercado = new JTable(modeloTabla);
+        tablaMercado.setRowHeight(30);
+        tablaMercado.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JScrollPane scroll = new JScrollPane(tablaMercado);
+        add(scroll, BorderLayout.CENTER);
 
-        add(barraBusqueda, BorderLayout.NORTH);
+        // Botón
+        JPanel panelBoton = new JPanel();
+        panelBoton.setBackground(Color.WHITE);
+        JButton btnFichar = new JButton("FICHAR JUGADOR SELECCIONADO");
+        btnFichar.setBackground(new Color(50, 205, 50));
+        btnFichar.setForeground(Color.WHITE);
+        btnFichar.addActionListener(e -> accionFichar());
+        panelBoton.add(btnFichar);
+        add(panelBoton, BorderLayout.SOUTH);
 
-        // Panel de saldo
-        panelSaldo = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        panelSaldo.setBackground(new Color(18, 18, 18));
-        labelSaldo = new JLabel();
-        labelSaldo.setForeground(Color.WHITE);
-        labelSaldo.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        panelSaldo.add(labelSaldo);
-        panelSaldo.setVisible(false); // oculto por defecto
-
-        add(panelSaldo, BorderLayout.SOUTH);
-
-        // Mostrar saldo inicial
-        actualizarLabelSaldo();
+        cargarJugadoresEnVenta();
     }
 
-    // Mostrar u ocultar saldo
-    public void mostrarSaldo(boolean mostrar) {
-        panelSaldo.setVisible(mostrar); // ahora se muestra/oculta el panel completo
-        revalidate();
-        repaint();
+    private void cargarJugadoresEnVenta() {
+        modeloTabla.setRowCount(0); 
+        if (ligaActual == null) return;
+        for (int idJugador : ligaActual.getMercadoIds()) {
+            Jugador j = GestorDatos.jugadores.get(idJugador);
+            if (j != null) {
+                modeloTabla.addRow(new Object[]{
+                    j.getPosicion(), j.getNombre(), j.getEquipo(),
+                    j.getTotalPuntos(), formatearDinero(j.getValorMercado())
+                });
+            }
+        }
     }
 
-    // Actualizar el saldo mostrado
-    public void setSaldo(int nuevoSaldo) {
-        this.saldo = nuevoSaldo;
-        actualizarLabelSaldo();
-    }
+    private void accionFichar() {
+        int fila = tablaMercado.getSelectedRow();
+        if (fila == -1) {
+            JOptionPane.showMessageDialog(this, "Selecciona un jugador.");
+            return;
+        }
+        int idJugador = ligaActual.getMercadoIds().get(fila);
+        Jugador j = GestorDatos.jugadores.get(idJugador);
 
-    // Formatear el saldo con puntos
-    private void actualizarLabelSaldo() {
-        DecimalFormat df = new DecimalFormat("#,###");
-        labelSaldo.setText("Saldo: " + df.format(saldo) + " €");
+        int confirm = JOptionPane.showConfirmDialog(this, "¿Fichar a " + j.getNombre() + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
+            if (GestorDatos.tramitarCompra(usuario, j, ligaActual)) {
+                JOptionPane.showMessageDialog(this, "¡Fichado!");
+                cargarJugadoresEnVenta();
+                actualizarSaldoVisual();
+            } else {
+                JOptionPane.showMessageDialog(this, "No tienes suficiente dinero.");
+            }
+        }
     }
+    
+    private void actualizarSaldoVisual() {
+        if (ligaActual != null) labelSaldo.setText("Saldo: " + formatearDinero(usuario.getSaldo(ligaActual.getId())));
+    }
+    private String formatearDinero(int c) { return NumberFormat.getNumberInstance(Locale.GERMANY).format(c) + " €"; }
+    
+    // Métodos para evitar errores en VentanaPrincipal
+    public void setSaldo(int saldo) { actualizarSaldoVisual(); }
+    public void mostrarSaldo(boolean b) { labelSaldo.setVisible(b); }
 }

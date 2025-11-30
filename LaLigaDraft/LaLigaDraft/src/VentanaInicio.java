@@ -83,6 +83,7 @@ public class VentanaInicio extends JFrame {
     
     public static void main(String[] args) {
     	GestorDatos.cargarTodo();
+    	GestorDatos.rellenarMercadoSiVacio();
     	System.out.println("Usuarios cargados: " + GestorDatos.usuarios.size());
 
         

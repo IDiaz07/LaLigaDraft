@@ -61,9 +61,7 @@ public class VentanaPrincipal extends JFrame {
         }
 
         // Panel "Mercado"
-        PanelMercado panelMercado = new PanelMercado(usuario.getSaldo(usuario.getLigaActualId()));
-        panelContenido.add(panelMercado, "Mercado");
-
+        PanelMercado panelMercado = new PanelMercado(usuario);
         // ====== Barra de navegación inferior ======
         JPanel panelMenu = new JPanel(new GridLayout(1, secciones.length));
         panelMenu.setBackground(new Color(28, 28, 28));
