@@ -90,6 +90,8 @@ public class VentanaPrincipal extends JFrame {
 
             panelMenu.add(boton);
         }
+        panelContenido.add(panelMercado, "Mercado");
+
 
         // ====== Layout general ======
         setLayout(new BorderLayout());
