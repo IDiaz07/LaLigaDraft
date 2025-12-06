@@ -13,9 +13,10 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
 public class VentanaInicio extends JFrame {
-	public VentanaInicio() {
-		setTitle("LaLigaDraft - Inicio");
-		setSize(400, 600);
+
+    public VentanaInicio() {
+        setTitle("LaLigaDraft - Inicio");
+        setSize(400, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setResizable(false);
@@ -41,7 +42,7 @@ public class VentanaInicio extends JFrame {
         JButton botonIniciarSesion = new JButton("Iniciar Sesión");
         botonIniciarSesion.setBackground(new Color(231, 76, 60));
         botonIniciarSesion.setForeground(Color.WHITE);
-        
+
         JButton botonRegistrarme = new JButton("Registrarme");
         botonRegistrarme.setBackground(new Color(231, 76, 60));
         botonRegistrarme.setForeground(Color.WHITE);
@@ -52,44 +53,23 @@ public class VentanaInicio extends JFrame {
         panelPrincipal.add(panelBotones, BorderLayout.CENTER);
 
         // Acciones de botones
-        botonIniciarSesion.addActionListener((ActionEvent e) -> {
-            abrirVentanaIniciarSesion();
-        });
-
-        botonRegistrarme.addActionListener((ActionEvent e) -> {
-            abrirVentanaRegistro();
-        });
+        botonIniciarSesion.addActionListener((ActionEvent e) -> abrirVentanaIniciarSesion());
+        botonRegistrarme.addActionListener((ActionEvent e) -> abrirVentanaRegistro());
 
         add(panelPrincipal);
     }
-	
-	// Método para abrir la VentanaRegistro y cerrar esta
+
     private void abrirVentanaRegistro() {
         SwingUtilities.invokeLater(() -> {
-            VentanaRegistro ventanaRegistro = new VentanaRegistro();
-            ventanaRegistro.setVisible(true);
+            new VentanaRegistro().setVisible(true);
         });
-        dispose(); // Cierra la ventana de inicio
+        dispose();
     }
-    
-    // Método para abrir la VentanaIniciarSesion y cerrar esta
+
     private void abrirVentanaIniciarSesion() {
         SwingUtilities.invokeLater(() -> {
-            VentanaIniciarSesion ventanaI = new VentanaIniciarSesion();
-            ventanaI.setVisible(true);
+            new VentanaIniciarSesion().setVisible(true);
         });
-        dispose(); // Cierra la ventana de inicio
-    }
-    
-    public static void main(String[] args) {
-    	GestorDatos.cargarTodo();
-    	GestorDatos.rellenarMercadoSiVacio();
-    	System.out.println("Usuarios cargados: " + GestorDatos.usuarios.size());
-
-        
-        SwingUtilities.invokeLater(() -> {
-            VentanaInicio ventanaInicio = new VentanaInicio();
-            ventanaInicio.setVisible(true);
-        });
+        dispose();
     }
 }
