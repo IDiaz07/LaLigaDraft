@@ -83,6 +83,17 @@ public class GestorDatos {
             	        FOREIGN KEY(liga_id) REFERENCES ligas(id)
             	    );
             	""");
+            
+            st.execute("""
+            	    CREATE TABLE IF NOT EXISTS ligas_mercado (
+            	        liga_id INTEGER,
+            	        jugador_id INTEGER,
+            	        PRIMARY KEY(liga_id, jugador_id),
+            	        FOREIGN KEY(liga_id) REFERENCES ligas(id),
+            	        FOREIGN KEY(jugador_id) REFERENCES jugadores(id)
+            	    );
+            	""");
+
 
 
             System.out.println("[OK] Tablas creadas o existentes.");
@@ -165,26 +176,59 @@ public class GestorDatos {
 
     public static Map<Integer, Liga> cargarLigas() {
         ligas.clear();
+
         try (Connection conn = getConnection();
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery("SELECT * FROM ligas")) {
 
             while (rs.next()) {
-            	Liga l = new Liga(
-            		    rs.getInt("id"),
-            		    rs.getString("nombre"),
-            		    rs.getBoolean("publica"),
-            		    rs.getString("codigoInvitacion")
-            		);
-            		l.setUltimaActualizacionMercado(rs.getLong("ultimaActualizacionMercado"));
+                Liga l = new Liga(
+                        rs.getInt("id"),
+                        rs.getString("nombre"),
+                        rs.getBoolean("publica"),
+                        rs.getString("codigoInvitacion")
+                );
+
+                l.setUltimaActualizacionMercado(rs.getLong("ultimaActualizacionMercado"));
                 ligas.put(l.getId(), l);
+            }
+
+            String sqlMercado = "SELECT jugador_id FROM ligas_mercado WHERE liga_id = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sqlMercado)) {
+
+                for (Liga l : ligas.values()) {
+
+                    ps.setInt(1, l.getId());
+                    ResultSet rm = ps.executeQuery();
+
+                    l.getMercadoIds().clear();
+
+                    while (rm.next()) {
+                        l.getMercadoIds().add(rm.getInt("jugador_id"));
+                    }
+                }
             }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+
+        for (Liga l : ligas.values()) {
+
+            boolean mercadoVacio = l.getMercadoIds() == null || l.getMercadoIds().isEmpty();
+
+            if (mercadoVacio) {
+                System.out.println("⚠ Mercado vacío detectado en liga " + l.getNombre() + ". Creando nuevo mercado...");
+                l.generarMercadoRandom();
+            }
+        }
+
+        guardarLigas();
+
         return ligas;
     }
+
     
     public static void cargarUsuariosLiga(Liga liga) {
 
@@ -383,23 +427,45 @@ public class GestorDatos {
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
+            // ==================== GUARDAR DATOS DE LIGAS ====================
             for (Liga l : ligas.values()) {
-
                 ps.setInt(1, l.getId());
                 ps.setString(2, l.getNombre());
                 ps.setBoolean(3, l.isPublica());
                 ps.setString(4, l.getCodigoInvitacion());
                 ps.setLong(5, l.getUltimaActualizacionMercado());
-
                 ps.executeUpdate();
             }
 
-            System.out.println("✅ Ligas guardadas correctamente en la base de datos.");
+            // ==================== GUARDAR MERCADO DE CADA LIGA ====================
+            String sqlMercadoDelete = "DELETE FROM ligas_mercado WHERE liga_id = ?";
+            String sqlMercadoInsert = "INSERT INTO ligas_mercado (liga_id, jugador_id) VALUES (?, ?)";
+
+            try (PreparedStatement del = conn.prepareStatement(sqlMercadoDelete);
+                 PreparedStatement ins = conn.prepareStatement(sqlMercadoInsert)) {
+
+                for (Liga l : ligas.values()) {
+
+                    // Borrar mercado antiguo
+                    del.setInt(1, l.getId());
+                    del.executeUpdate();
+
+                    // Insertar mercado actual
+                    for (Integer idJ : l.getMercadoIds()) {
+                        ins.setInt(1, l.getId());
+                        ins.setInt(2, idJ);
+                        ins.executeUpdate();
+                    }
+                }
+            }
+
+            System.out.println("✓ Mercado de ligas guardado correctamente.");
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
 
     public static Liga buscarLigaPublicaDisponible() {
         for (Liga l : ligas.values()) {
@@ -636,20 +702,23 @@ public class GestorDatos {
     }
     
 
+    public static void renovarMercado(Liga liga) {
+        if (liga == null) return;
+        liga.generarMercadoRandom();
+        // opcional: persistir inmediatamente
+        guardarLigas();
+    }
+
     public static void rellenarMercadoSiVacio() {
         for (Liga l : ligas.values()) {
-            if (l.getMercadoIds().isEmpty()) {
-                System.out.println("Rellenando mercado de liga " + l.getNombre() + "...");
-                int contador = 0;
-                for (Integer id : jugadores.keySet()) {
-                    // Añadimos jugadores al mercado para probar
-                    l.getMercadoIds().add(id);
-                    contador++;
-                    if (contador >= 10) break; 
-                }
+            if (l.getMercadoIds() == null || l.getMercadoIds().isEmpty() || l.getMercadoIds().size() != 10) {
+                System.out.println("[GestorDatos] Rellenando/ajustando mercado de liga " + l.getNombre());
+                l.generarMercadoRandom();
             }
         }
     }
+
+
     
 }
 

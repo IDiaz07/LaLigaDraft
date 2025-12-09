@@ -4,10 +4,12 @@ import java.util.stream.Collectors;
 public class Liga {
     private int id;
     private String nombre;
-    private boolean publica;           // indica si es pública o privada
-    private String codigoInvitacion;  // solo para privadas
-    private List<Integer> usuarios;    // IDs de usuarios
-    private List<Integer> mercado;     // IDs de jugadores
+    private boolean publica;
+    private String codigoInvitacion;
+
+    private List<Integer> usuarios;  // IDs de usuarios
+    private List<Integer> mercado;   // IDs de jugadores en mercado
+
     private long ultimaActualizacionMercado;
 
     public Liga(int id, String nombre) {
@@ -19,12 +21,15 @@ public class Liga {
         this.nombre = nombre;
         this.publica = publica;
         this.codigoInvitacion = codigoInvitacion;
+
         this.usuarios = new ArrayList<>();
         this.mercado = new ArrayList<>();
         this.ultimaActualizacionMercado = System.currentTimeMillis();
     }
 
-    // ============================== GETTERS ==============================
+    // ============================================================
+    // GETTERS
+    // ============================================================
     public int getId() { return id; }
     public String getNombre() { return nombre; }
     public boolean isPublica() { return publica; }
@@ -37,7 +42,9 @@ public class Liga {
         this.ultimaActualizacionMercado = timestamp;
     }
 
-    // ============================== MÉTODOS ==============================
+    // ============================================================
+    // AÑADIR USUARIO
+    // ============================================================
     public void addUsuario(int idUsuario) {
         if (!usuarios.contains(idUsuario)) {
             usuarios.add(idUsuario);
@@ -48,27 +55,60 @@ public class Liga {
         }
     }
 
-    public void addJugadorAlMercado(int idJugador) {
-        if (!mercado.contains(idJugador)) {
-            mercado.add(idJugador);
+    // ============================================================
+    // GENERAR MERCADO RANDOM DE 10 JUGADORES LIBRES
+    // ============================================================
+    public void generarMercadoRandom() {
+
+        Set<Integer> mercadoAnterior = new HashSet<>(mercado);
+
+        Set<Integer> jugadoresOcupados = new HashSet<>();
+        for (int idU : usuarios) {
+            Usuario u = GestorDatos.usuarios.get(idU);
+            if (u != null) jugadoresOcupados.addAll(u.getJugadores());
         }
+        
+        List<Jugador> disponibles = new ArrayList<>();
+        for (Jugador j : GestorDatos.jugadores.values()) {
+            if (!jugadoresOcupados.contains(j.getId()) &&
+                !mercadoAnterior.contains(j.getId())) {
+                disponibles.add(j);
+            }
+        }
+
+        if (disponibles.size() < 10) {
+            for (Jugador j : GestorDatos.jugadores.values()) {
+                if (!jugadoresOcupados.contains(j.getId()) && !disponibles.contains(j)) {
+                    disponibles.add(j);
+                    if (disponibles.size() >= 10) break;
+                }
+            }
+        }
+
+        Collections.shuffle(disponibles);
+
+        mercado.clear();
+        for (int i = 0; i < 10; i++) {
+            mercado.add(disponibles.get(i).getId());
+        }
+
+        ultimaActualizacionMercado = System.currentTimeMillis();
+
+        System.out.println("🆕 Mercado renovado sin repeticiones para la liga " + nombre);
     }
 
+
+    // ============================================================
+    // COMPROBAR SI EL MERCADO EXPIRÓ (24H)
+    // ============================================================
     public boolean mercadoExpirado() {
         long ahora = System.currentTimeMillis();
         return (ahora - ultimaActualizacionMercado) >= 24L * 60 * 60 * 1000; // 24h
     }
 
-    public void renovarMercado(List<Integer> nuevosJugadores) {
-        if (nuevosJugadores.size() != 8) {
-            throw new IllegalArgumentException("El mercado debe tener exactamente 8 jugadores");
-        }
-        mercado.clear();
-        mercado.addAll(nuevosJugadores);
-        ultimaActualizacionMercado = System.currentTimeMillis();
-    }
-    
-
+    // ============================================================
+    // CLASIFICACIÓN
+    // ============================================================
     public List<Usuario> getClasificacion() {
         List<Usuario> lista = new ArrayList<>();
         for (int idU : usuarios) {
@@ -88,13 +128,15 @@ public class Liga {
         return total;
     }
 
-    // ============================== EXPORT / IMPORT ==============================
+    // ============================================================
+    // EXPORT / IMPORT
+    // ============================================================
     public String toFileString() {
         String usuStr = usuarios.stream().map(String::valueOf).collect(Collectors.joining(","));
         String merStr = mercado.stream().map(String::valueOf).collect(Collectors.joining(","));
         return id + ";" + nombre + ";" + (publica ? "1" : "0") + ";" +
-               (codigoInvitacion == null ? "" : codigoInvitacion) + ";" +
-               usuStr + ";" + merStr + ";" + ultimaActualizacionMercado;
+                (codigoInvitacion == null ? "" : codigoInvitacion) + ";" +
+                usuStr + ";" + merStr + ";" + ultimaActualizacionMercado;
     }
 
     public static Liga fromFileString(String linea) {
@@ -127,9 +169,9 @@ public class Liga {
     @Override
     public String toString() {
         return "Liga{id=" + id +
-               ", nombre='" + nombre + '\'' +
-               ", publica=" + publica +
-               ", usuarios=" + usuarios.size() +
-               ", mercado=" + mercado.size() + " jugadores}";
+                ", nombre='" + nombre + '\'' +
+                ", publica=" + publica +
+                ", usuarios=" + usuarios.size() +
+                ", mercado=" + mercado.size() + " jugadores}";
     }
 }

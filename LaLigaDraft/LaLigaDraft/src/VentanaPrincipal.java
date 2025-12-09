@@ -79,12 +79,8 @@ public class VentanaPrincipal extends JFrame {
             boton.addActionListener((e) -> {
                 cardLayout.show(panelContenido, s);
 
-                // Mostrar saldo solo en "Mercado" y actualizar con el saldo de la liga actual
                 if ("Mercado".equals(s)) {
-                    panelMercado.setSaldo(usuario.getSaldo(usuario.getLigaActualId()));
-                    panelMercado.mostrarSaldo(true);
-                } else {
-                    panelMercado.mostrarSaldo(false);
+                    panelMercado.actualizarSaldoVisual();
                 }
             });
 
