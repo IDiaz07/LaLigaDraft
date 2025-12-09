@@ -1,58 +1,46 @@
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.GridLayout;
+import java.awt.*;
 import java.awt.event.ActionEvent;
-
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 
 public class VentanaInicio extends JFrame {
 
     public VentanaInicio() {
         setTitle("LaLigaDraft - Inicio");
-        setSize(400, 600);
+        setSize(600, 900);  
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setResizable(false);
 
-        // Panel principal
-        JPanel panelPrincipal = new JPanel();
-        panelPrincipal.setLayout(new BorderLayout());
+        JPanel panelPrincipal = new JPanel(new BorderLayout());
         panelPrincipal.setBackground(new Color(18, 18, 18));
 
-        // Etiqueta de bienvenida
+        // Etiqueta de bienvenida (NO MODIFICADA, solo proporcional)
         JLabel labelBienvenida = new JLabel("¡BIENVENIDO A LALIGADRAFT!", SwingConstants.CENTER);
-        labelBienvenida.setFont(new Font("Arial", Font.BOLD, 20));
+        labelBienvenida.setFont(new Font("Arial", Font.BOLD, 28));
         labelBienvenida.setForeground(Color.WHITE);
-        labelBienvenida.setBorder(BorderFactory.createEmptyBorder(40, 10, 40, 10));
+        labelBienvenida.setBorder(BorderFactory.createEmptyBorder(80, 10, 80, 10));
         panelPrincipal.add(labelBienvenida, BorderLayout.NORTH);
 
-        // Panel para los botones
-        JPanel panelBotones = new JPanel();
-        panelBotones.setLayout(new GridLayout(1, 2, 20, 20));
+        // Panel para los botones (idéntico estilo, sin deformaciones)
+        JPanel panelBotones = new JPanel(new GridLayout(1, 2, 40, 40));
         panelBotones.setBackground(new Color(18, 18, 18));
-        panelBotones.setBorder(BorderFactory.createEmptyBorder(325, 50, 100, 50));
+        panelBotones.setBorder(BorderFactory.createEmptyBorder(450, 100, 150, 100));
 
         JButton botonIniciarSesion = new JButton("Iniciar Sesión");
         botonIniciarSesion.setBackground(new Color(231, 76, 60));
         botonIniciarSesion.setForeground(Color.WHITE);
+        botonIniciarSesion.setFont(new Font("Arial", Font.BOLD, 20));
 
         JButton botonRegistrarme = new JButton("Registrarme");
         botonRegistrarme.setBackground(new Color(231, 76, 60));
         botonRegistrarme.setForeground(Color.WHITE);
+        botonRegistrarme.setFont(new Font("Arial", Font.BOLD, 20));
 
         panelBotones.add(botonIniciarSesion);
         panelBotones.add(botonRegistrarme);
 
         panelPrincipal.add(panelBotones, BorderLayout.CENTER);
 
-        // Acciones de botones
         botonIniciarSesion.addActionListener((ActionEvent e) -> abrirVentanaIniciarSesion());
         botonRegistrarme.addActionListener((ActionEvent e) -> abrirVentanaRegistro());
 
@@ -60,16 +48,12 @@ public class VentanaInicio extends JFrame {
     }
 
     private void abrirVentanaRegistro() {
-        SwingUtilities.invokeLater(() -> {
-            new VentanaRegistro().setVisible(true);
-        });
+        new VentanaRegistro().setVisible(true);
         dispose();
     }
 
     private void abrirVentanaIniciarSesion() {
-        SwingUtilities.invokeLater(() -> {
-            new VentanaIniciarSesion().setVisible(true);
-        });
+        new VentanaIniciarSesion().setVisible(true);
         dispose();
     }
 }

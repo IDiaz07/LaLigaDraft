@@ -1,74 +1,53 @@
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import java.awt.BorderLayout;
-import java.awt.Font;
-import java.awt.GridLayout;
-import javax.swing.*;
-import java.util.List;
-import java.util.ArrayList;
-
+import java.awt.*;
+import java.awt.event.ActionEvent;
 
 public class VentanaEquipoInicial extends JFrame {
 
-    private final Usuario usuario;
-
     public VentanaEquipoInicial(Usuario usuario) {
-        this.usuario = usuario;
-        setTitle("Tu equipo inicial - " + usuario.getNombre());
-        setSize(400, 600);
+
+        setTitle("Equipo Inicial");
+        setSize(600, 900);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setResizable(false);
 
-        // Panel principal con 4 filas (una por posición)
-        JPanel mainPanel = new JPanel(new GridLayout(4, 1, 10, 10));
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        JPanel main = new JPanel(new BorderLayout());
+        main.setBackground(new Color(18, 18, 18));
 
-        mainPanel.add(crearTablaPorPosicion("Porteros", Posicion.POR));
-        mainPanel.add(crearTablaPorPosicion("Defensas", Posicion.DEF));
-        mainPanel.add(crearTablaPorPosicion("Mediocentros", Posicion.MED));
-        mainPanel.add(crearTablaPorPosicion("Delanteros", Posicion.DEL));
+        JLabel titulo = new JLabel("TU EQUIPO INICIAL", SwingConstants.CENTER);
+        titulo.setFont(new Font("Arial", Font.BOLD, 30));
+        titulo.setForeground(Color.WHITE);
+        titulo.setBorder(BorderFactory.createEmptyBorder(40, 10, 40, 10));
+        main.add(titulo, BorderLayout.NORTH);
 
-        JButton btnContinuar = new JButton("Continuar");
-        btnContinuar.addActionListener(e -> dispose());
-
-        getContentPane().setLayout(new BorderLayout());
-        getContentPane().add(mainPanel, BorderLayout.CENTER);
-        getContentPane().add(btnContinuar, BorderLayout.SOUTH);
-    }
-
-    private JPanel crearTablaPorPosicion(String titulo, Posicion pos) {
-        List<Jugador> lista = new ArrayList<>();
-        for (int idJ : usuario.getJugadores()) {
-            Jugador j = GestorDatos.jugadores.get(idJ);
-            if (j != null && j.getPosicion() == pos) {
-                lista.add(j);
-            }
+        DefaultListModel<String> modelo = new DefaultListModel<>();
+        for (int id : usuario.getJugadores()) {
+            Jugador j = GestorDatos.jugadores.get(id);
+            modelo.addElement(j.getNombre() + " - " + j.getPosicion() + " - " + j.getEquipo());
         }
 
-        String[] columnas = {"Posición", "Nombre", "Equipo", "Valor Mercado", "Puntos Totales"};
-        DefaultTableModel modelo = new DefaultTableModel(columnas, 0);
+        JList<String> lista = new JList<>(modelo);
+        lista.setFont(new Font("Arial", Font.PLAIN, 18));
+        lista.setBackground(new Color(28, 28, 28));
+        lista.setForeground(Color.WHITE);
+        lista.setSelectionBackground(new Color(231, 76, 60));
 
-        for (Jugador j : lista) {
-            modelo.addRow(new Object[]{
-                    j.getPosicion(),
-                    j.getNombre(),
-                    j.getEquipo(),
-                    j.getValorMercado(),
-                    j.getTotalPuntos()
-            });
-        }
+        JScrollPane scroll = new JScrollPane(lista);
+        scroll.setBorder(null);
+        main.add(scroll, BorderLayout.CENTER);
 
-        JTable tabla = new JTable(modelo);
-        tabla.setEnabled(false);
-        tabla.getTableHeader().setReorderingAllowed(false);
-        JScrollPane scroll = new JScrollPane(tabla);
+        JButton continuar = new JButton("Continuar");
+        continuar.setFont(new Font("Arial", Font.BOLD, 24));
+        continuar.setBackground(new Color(231, 76, 60));
+        continuar.setForeground(Color.WHITE);
+        continuar.setFocusPainted(false);
+        continuar.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        JPanel panel = new JPanel(new BorderLayout());
-        JLabel label = new JLabel(titulo, SwingConstants.CENTER);
-        label.setFont(label.getFont().deriveFont(Font.BOLD, 16f));
-        panel.add(label, BorderLayout.NORTH);
-        panel.add(scroll, BorderLayout.CENTER);
+        continuar.addActionListener((ActionEvent e) -> dispose());
 
-        return panel;
+        main.add(continuar, BorderLayout.SOUTH);
+
+        add(main);
     }
 }

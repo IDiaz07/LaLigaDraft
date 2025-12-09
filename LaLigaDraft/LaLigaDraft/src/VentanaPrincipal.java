@@ -10,107 +10,136 @@ public class VentanaPrincipal extends JFrame {
     public VentanaPrincipal(Usuario usuario) {
         this.usuario = usuario;
 
-        // Obtener la liga actual
+        // ⭐ CARGA COMPLETA ANTES DE TODO
+        GestorDatos.inicializar();
+        GestorDatos.cargarJugadores();  // ← JUGADORES DISPONIBLES
+        System.out.println("✅ Jugadores cargados: " + GestorDatos.jugadores.size());
+
         Liga ligaActual = GestorDatos.ligas.get(usuario.getLigaActualId());
 
-        setTitle("Liga Fantasy");
-        setSize(400, 600);
+        setTitle("LaLigaDraft");
+        setSize(600, 900);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setResizable(false);
 
-        // ====== Panel central con CardLayout ======
+        // ================= PANEL CONTENIDO ================
         cardLayout = new CardLayout();
         panelContenido = new JPanel(cardLayout);
-        panelContenido.setBackground(new Color(18, 18, 18)); // fondo oscuro
+        panelContenido.setBackground(new Color(18, 18, 18));
 
-        String[] secciones = {"Mis Ligas", "Clasificacion", "Equipo", "Mercado", "Actividad"};
+        // Panel placeholders
+        String[] secciones = {"Dashboard", "Equipo", "Clasificación", "Mercado", "Actividad"};
 
-        // Crear secciones normales (excepto Equipo, Clasificacion y Mercado)
         for (String s : secciones) {
-            if (!s.equals("Equipo") && !s.equals("Clasificacion") && !s.equals("Mercado")) {
-                panelContenido.add(crearPanel(s), s);
+            if (!s.equals("Equipo") && !s.equals("Clasificación") && !s.equals("Mercado")) {
+                panelContenido.add(crearPanelPlaceholder(s), s);
             }
         }
 
-        // Panel "Equipo"
+        // EQUIPO (con datos YA cargados)
         try {
-            PanelEquipo panelEquipo = new PanelEquipo(usuario);
-            JPanel panelContenedorEquipo = new JPanel(new BorderLayout());
-            panelContenedorEquipo.add(panelEquipo, BorderLayout.CENTER);
-            panelContenido.add(panelContenedorEquipo, "Equipo");
-        } catch (Throwable t) {
-            panelContenido.add(crearPanel("Equipo"), "Equipo");
+            panelContenido.add(new PanelEquipo(usuario), "Equipo");
+            System.out.println("✅ PanelEquipo creado correctamente");
+        } catch (Exception e) {
+            System.err.println("❌ Error PanelEquipo: " + e.getMessage());
+            e.printStackTrace();
+            panelContenido.add(crearPanelError("Equipo"), "Equipo");
         }
 
-        // Panel "Clasificación"
+        // CLASIFICACION
         try {
             if (ligaActual != null) {
                 GestorDatos.cargarUsuariosLiga(ligaActual);
             }
-            PanelClasificacion panelClasificacion = new PanelClasificacion(ligaActual);
-            JPanel panelContenedorClasificacion = new JPanel(new BorderLayout());
-            panelContenedorClasificacion.setBackground(new Color(18, 18, 18));
-            panelClasificacion.setBackground(new Color(18, 18, 18));
-            panelContenedorClasificacion.add(panelClasificacion, BorderLayout.CENTER);
-            panelContenido.add(panelContenedorClasificacion, "Clasificacion");
-        } catch (Throwable t) {
-            JPanel panelClasificacion = crearPanel("Clasificacion - Error: " + t.getMessage());
-            panelClasificacion.setBackground(new Color(18, 18, 18));
-            panelContenido.add(panelClasificacion, "Clasificacion");
+            panelContenido.add(new PanelClasificacion(ligaActual), "Clasificación");
+        } catch (Exception e) {
+            System.err.println("❌ Error PanelClasificacion: " + e.getMessage());
+            panelContenido.add(crearPanelError("Clasificación"), "Clasificación");
         }
 
-        // Panel "Mercado"
-        PanelMercado panelMercado = new PanelMercado(usuario);
-        // ====== Barra de navegación inferior ======
-        JPanel panelMenu = new JPanel(new GridLayout(1, secciones.length));
-        panelMenu.setBackground(new Color(28, 28, 28));
+        // MERCADO
+        try {
+            PanelMercado panelMercado = new PanelMercado(usuario);
+            panelContenido.add(panelMercado, "Mercado");
+        } catch (Exception e) {
+            System.err.println("❌ Error PanelMercado: " + e.getMessage());
+            panelContenido.add(crearPanelError("Mercado"), "Mercado");
+        }
+
+        // ===================== MENÚ INFERIOR ======================
+        JPanel menu = new JPanel(new GridLayout(1, secciones.length));
+        menu.setBackground(new Color(28, 28, 28));
+        menu.setPreferredSize(new Dimension(600, 85));  // 🔥 Menú más grande
 
         for (String s : secciones) {
             JButton boton = new JButton(s);
-            boton.setPreferredSize(new Dimension(0, 60));
             boton.setFocusPainted(false);
-            boton.setBackground(new Color(28, 28, 28));
+            boton.setFont(new Font("Arial", Font.BOLD, 14));
             boton.setForeground(Color.WHITE);
+            boton.setBackground(new Color(28, 28, 28));
             boton.setBorderPainted(false);
-            boton.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-            boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            boton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-            boton.addActionListener((e) -> {
+            boton.addActionListener(e -> {
                 cardLayout.show(panelContenido, s);
-
-                if ("Mercado".equals(s)) {
-                    panelMercado.actualizarSaldoVisual();
+                if (s.equals("Mercado")) {
+                    try {
+                        // Recargar jugadores por si acaso
+                        GestorDatos.cargarJugadores();
+                    } catch (Exception ex) {
+                        System.err.println("Error recargando mercado: " + ex.getMessage());
+                    }
                 }
             });
 
-            panelMenu.add(boton);
+            menu.add(boton);
         }
-        panelContenido.add(panelMercado, "Mercado");
 
+        // =============== CONTENEDOR PRINCIPAL AJUSTADO ===============
+        JPanel contenedor = new JPanel(new BorderLayout());
+        contenedor.setBackground(new Color(18, 18, 18));
 
-        // ====== Layout general ======
-        setLayout(new BorderLayout());
-        add(panelContenido, BorderLayout.CENTER);
-        add(panelMenu, BorderLayout.SOUTH);
+        contenedor.add(panelContenido, BorderLayout.CENTER);
+        contenedor.add(menu, BorderLayout.SOUTH);
 
-        cardLayout.show(panelContenido, "Mis Ligas");
+        add(contenedor);
 
-        // Abrir ventana de equipo inicial si el usuario no tiene jugadores
+        // Mostrar Dashboard por defecto
+        cardLayout.show(panelContenido, "Dashboard");
+
+        // Equipo inicial si corresponde
         if (usuario.getJugadores() != null && usuario.getJugadores().size() == 15) {
             SwingUtilities.invokeLater(() -> {
-                VentanaEquipoInicial ve = new VentanaEquipoInicial(usuario);
-                ve.setVisible(true);
+                new VentanaEquipoInicial(usuario).setVisible(true);
             });
         }
+        
+        System.out.println("✅ VentanaPrincipal lista - Jugadores del usuario: " + usuario.getJugadores().size());
     }
 
-    private JPanel crearPanel(String texto) {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(new Color(18, 18, 18));
-        JLabel label = new JLabel("Sección: " + texto, SwingConstants.CENTER);
-        label.setForeground(Color.WHITE);
-        panel.add(label, BorderLayout.CENTER);
-        return panel;
+    // ===================== PLACEHOLDERS ======================
+    private JPanel crearPanelPlaceholder(String txt) {
+        JPanel p = new JPanel(new BorderLayout());
+        p.setBackground(new Color(18, 18, 18));
+
+        JLabel l = new JLabel(txt, SwingConstants.CENTER);
+        l.setFont(new Font("Arial", Font.BOLD, 30));
+        l.setForeground(Color.WHITE);
+
+        p.add(l, BorderLayout.CENTER);
+        return p;
+    }
+
+    private JPanel crearPanelError(String modulo) {
+        JPanel p = new JPanel(new BorderLayout());
+        p.setBackground(new Color(18, 18, 18));
+
+        JLabel l = new JLabel("Error al cargar " + modulo, SwingConstants.CENTER);
+        l.setFont(new Font("Arial", Font.BOLD, 26));
+        l.setForeground(Color.RED);
+
+        p.add(l, BorderLayout.CENTER);
+        return p;
     }
 }

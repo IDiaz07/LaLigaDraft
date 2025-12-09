@@ -1,183 +1,138 @@
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
+import java.awt.*;
+import java.awt.event.*;
 import javax.swing.*;
 
 public class VentanaRegistro extends JFrame {
 
     private JTextField usuario;
     private JTextField email;
-    private JTextField tf;
+    private JTextField telefono;
     private JPasswordField contraseña;
 
     public VentanaRegistro() {
-        setTitle("Registro de Sesion");
-        setSize(400, 600);
+        setTitle("Registro");
+        setSize(600, 900);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setResizable(false);
 
-        JPanel panelPrincipal = new JPanel();
-        panelPrincipal.setLayout(new BorderLayout());
-        panelPrincipal.setBackground(new Color(18, 18, 18));
-        
-        JLabel labelIniciarSesion = new JLabel("REGISTRAR SESIÓN", SwingConstants.CENTER);
-        labelIniciarSesion.setFont(new Font("Arial", Font.BOLD, 20));
-        labelIniciarSesion.setBorder(BorderFactory.createEmptyBorder(40, 10, 40, 10));
-        labelIniciarSesion.setForeground(Color.WHITE);
-        panelPrincipal.add(labelIniciarSesion, BorderLayout.NORTH);
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(new Color(18, 18, 18));
 
-        JPanel panelCampos = new JPanel();
-        panelCampos.setLayout(new GridLayout(4, 1, 20, 20));
-        panelCampos.setBorder(BorderFactory.createEmptyBorder(150, 50, 5, 50));
-        panelCampos.setBackground(new Color(18, 18, 18));
+        JLabel titulo = new JLabel("REGISTRO", SwingConstants.CENTER);
+        titulo.setForeground(Color.WHITE);
+        titulo.setFont(new Font("Arial", Font.BOLD, 32));
+        titulo.setBorder(BorderFactory.createEmptyBorder(80, 10, 60, 10));
 
-        usuario = new JTextField();
-        email = new JTextField();
-        tf = new JTextField();
-        contraseña = new JPasswordField();
+        panel.add(titulo, BorderLayout.NORTH);
 
-        addPlaceholder(usuario, "Nombre de Usuario");
-        addPlaceholder(email, "Email");
-        addPlaceholder(tf, "Telefono");
-        addPlaceholder(contraseña, "Contraseña");
+        JPanel campos = new JPanel(new GridLayout(4, 1, 30, 30));
+        campos.setBackground(new Color(18, 18, 18));
+        campos.setBorder(BorderFactory.createEmptyBorder(100, 80, 80, 80));
 
-        panelCampos.add(usuario);
-        panelCampos.add(email);
-        panelCampos.add(tf);
-        panelCampos.add(contraseña);
-        panelPrincipal.add(panelCampos);
+        usuario = crearCampo("Nombre de Usuario");
+        email = crearCampo("Email");
+        telefono = crearCampo("Teléfono");
+        contraseña = crearCampoPassword("Contraseña");
 
-        // Panel para los botones
-        JPanel panelBotones = new JPanel();
-        panelBotones.setLayout(new GridLayout(1, 2, 20, 20));
-        panelBotones.setBorder(BorderFactory.createEmptyBorder(5, 50, 100, 50));
-        panelBotones.setBackground(new Color(18, 18, 18));
+        campos.add(usuario);
+        campos.add(email);
+        campos.add(telefono);
+        campos.add(contraseña);
 
-        JButton botonAtras = new JButton("Atras");
-        botonAtras.setBackground(new Color(231, 76, 60));
-        botonAtras.setForeground(Color.WHITE);
-        
-        JButton botonRegistrarse = new JButton("Registrarse");
-        botonRegistrarse.setBackground(new Color(231, 76, 60));
-        botonRegistrarse.setForeground(Color.WHITE);
+        panel.add(campos, BorderLayout.CENTER);
 
-        panelBotones.add(botonAtras);
-        panelBotones.add(botonRegistrarse);
+        JPanel botones = new JPanel(new GridLayout(1, 2, 40, 40));
+        botones.setBackground(new Color(18, 18, 18));
+        botones.setBorder(BorderFactory.createEmptyBorder(40, 80, 150, 80));
 
-        // Acción botón Registrarse
-        botonRegistrarse.addActionListener((ActionEvent e) -> {
-            String nombreUsuario = usuario.getText().trim();
-            String correo = email.getText().trim();
-            String telefono = tf.getText().trim();
-            String pass = new String(contraseña.getPassword()).trim();
+        JButton atras = crearBoton("Atrás");
+        JButton registrar = crearBoton("Registrarse");
 
-            // Validaciones
-            if (nombreUsuario.isEmpty() || nombreUsuario.equals("Nombre de Usuario") ||
-                correo.isEmpty() || correo.equals("Email") ||
-                telefono.isEmpty() || telefono.equals("Telefono") ||
-                pass.isEmpty() || pass.equals("Contraseña")) {
-                
-                JOptionPane.showMessageDialog(this, "Debes rellenar todos los campos",
-                        "Error", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
+        atras.addActionListener(e -> volver());
+        registrar.addActionListener(e -> registrarUsuario());
 
-            if (pass.length() < 8) {
-                JOptionPane.showMessageDialog(this, "La contraseña debe tener al menos 8 caracteres",
-                        "Error", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
+        botones.add(atras);
+        botones.add(registrar);
 
-            boolean existe = GestorDatos.usuarios.values().stream()
-                    .anyMatch(u -> u.getNombre().equalsIgnoreCase(nombreUsuario));
-
-            if (existe) {
-                JOptionPane.showMessageDialog(this, "El nombre de usuario ya existe",
-                        "Error", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-
-            // Registrar el usuario con saldo inicial de 1.000.000
-            GestorDatos.registrarUsuario(nombreUsuario, correo, telefono, pass, 1000000);
-
-            JOptionPane.showMessageDialog(this, "Usuario registrado correctamente",
-                    "Registro", JOptionPane.INFORMATION_MESSAGE);
-
-            abrirVentanaInicio();
-        });
-
-        // Acción botón Atrás
-        botonAtras.addActionListener((ActionEvent e) -> {
-            abrirVentanaInicio();
-        });
-
-        add(panelPrincipal, BorderLayout.CENTER);
-        add(panelBotones, BorderLayout.SOUTH);
+        add(panel, BorderLayout.CENTER);
+        add(botones, BorderLayout.SOUTH);
     }
 
-    // Placeholders para JTextField
-    public static void addPlaceholder(JTextField textField, String placeholder) {
-        textField.setText(placeholder);
-        textField.setForeground(Color.WHITE);
-        textField.setBackground(new Color(28, 28, 28));
+    private JTextField crearCampo(String placeholder) {
+        JTextField tf = new JTextField(placeholder);
+        tf.setBackground(new Color(28, 28, 28));
+        tf.setForeground(Color.WHITE);
+        tf.setFont(new Font("Arial", Font.PLAIN, 20));
+        tf.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
-        textField.addFocusListener(new FocusAdapter() {
-            @Override
+        tf.addFocusListener(new FocusAdapter() {
             public void focusGained(FocusEvent e) {
-                if (textField.getText().equals(placeholder)) {
-                    textField.setText("");
-                    textField.setForeground(Color.WHITE);
-                }
+                if (tf.getText().equals(placeholder)) tf.setText("");
             }
-            @Override
             public void focusLost(FocusEvent e) {
-                if (textField.getText().isEmpty()) {
-                    textField.setText(placeholder);
-                    textField.setForeground(Color.WHITE);
-                }
+                if (tf.getText().isEmpty()) tf.setText(placeholder);
             }
         });
+
+        return tf;
     }
 
-    // Placeholders para JPasswordField
-    public static void addPlaceholder(JPasswordField passwordField, String placeholder) {
-        passwordField.setEchoChar((char)0);
-        passwordField.setText(placeholder);
-        passwordField.setForeground(Color.WHITE);
-        passwordField.setBackground(new Color(28, 28, 28));
+    private JPasswordField crearCampoPassword(String placeholder) {
+        JPasswordField pf = new JPasswordField(placeholder);
+        pf.setBackground(new Color(28, 28, 28));
+        pf.setForeground(Color.WHITE);
+        pf.setFont(new Font("Arial", Font.PLAIN, 20));
+        pf.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+        pf.setEchoChar((char)0);
 
-        passwordField.addFocusListener(new FocusAdapter() {
-            @Override
+        pf.addFocusListener(new FocusAdapter() {
             public void focusGained(FocusEvent e) {
-                String pass = new String(passwordField.getPassword());
-                if (pass.equals(placeholder)) {
-                    passwordField.setText("");
-                    passwordField.setForeground(Color.WHITE);
-                    passwordField.setEchoChar('•');
+                if (new String(pf.getPassword()).equals(placeholder)) {
+                    pf.setText("");
+                    pf.setEchoChar('•');
                 }
             }
-            @Override
             public void focusLost(FocusEvent e) {
-                String pass = new String(passwordField.getPassword());
-                if (pass.isEmpty()) {
-                    passwordField.setEchoChar((char)0);
-                    passwordField.setText(placeholder);
-                    passwordField.setForeground(Color.WHITE);
+                if (new String(pf.getPassword()).isEmpty()) {
+                    pf.setEchoChar((char)0);
+                    pf.setText(placeholder);
                 }
             }
         });
+
+        return pf;
     }
 
-    private void abrirVentanaInicio() {
-        SwingUtilities.invokeLater(() -> {
-            VentanaInicio ventanaI = new VentanaInicio();
-            ventanaI.setVisible(true);
-        });
+    private JButton crearBoton(String txt) {
+        JButton b = new JButton(txt);
+        b.setBackground(new Color(231, 76, 60));
+        b.setForeground(Color.WHITE);
+        b.setFont(new Font("Arial", Font.BOLD, 22));
+        return b;
+    }
+
+    private void volver() {
+        new VentanaInicio().setVisible(true);
         dispose();
+    }
+
+    private void registrarUsuario() {
+        String nombre = usuario.getText().trim();
+        String mail = email.getText().trim();
+        String tel = telefono.getText().trim();
+        String pass = new String(contraseña.getPassword());
+
+        if (nombre.isEmpty() || mail.isEmpty() || tel.isEmpty() || pass.isEmpty() ||
+            nombre.equals("Nombre de Usuario"))
+        {
+            JOptionPane.showMessageDialog(this, "Rellena todos los campos.");
+            return;
+        }
+
+        GestorDatos.registrarUsuario(nombre, mail, tel, pass, 1000000);
+
+        JOptionPane.showMessageDialog(this, "Usuario registrado correctamente.");
+        volver();
     }
 }

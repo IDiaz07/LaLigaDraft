@@ -19,11 +19,13 @@ public class ItemMercado extends JPanel {
         setBackground(new Color(35, 35, 48));
 
         setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createEmptyBorder(5, 5, 5, 5),
+                BorderFactory.createEmptyBorder(6, 6, 6, 6),
                 BorderFactory.createLineBorder(new Color(70, 70, 85), 1)
         ));
 
-        setMaximumSize(new Dimension(Integer.MAX_VALUE, 120));
+        // ⬆️ Aumentamos el tamaño para que todo se vea perfecto
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, 150));
+
         add(construirContenido(), BorderLayout.CENTER);
     }
 
@@ -31,7 +33,7 @@ public class ItemMercado extends JPanel {
     private JPanel construirContenido() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(new Color(45, 45, 60));
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        panel.setBorder(BorderFactory.createEmptyBorder(14, 18, 14, 18));
 
         panel.add(construirInfoJugador(), BorderLayout.CENTER);
         panel.add(construirBoton(), BorderLayout.EAST);
@@ -47,27 +49,31 @@ public class ItemMercado extends JPanel {
         panel.setBackground(new Color(45, 45, 60));
 
         JLabel lblNombre = new JLabel(jugador.getNombre());
-        lblNombre.setFont(new Font("Arial", Font.BOLD, 17));
+        lblNombre.setFont(new Font("Arial", Font.BOLD, 19));
         lblNombre.setForeground(Color.WHITE);
 
         JLabel lblPosicion = new JLabel(formatoPosicion(jugador.getPosicion()));
         lblPosicion.setOpaque(true);
         lblPosicion.setForeground(Color.WHITE);
-        lblPosicion.setFont(new Font("Arial", Font.BOLD, 13));
+        lblPosicion.setFont(new Font("Arial", Font.BOLD, 14));
         lblPosicion.setBackground(colorPosicion(jugador.getPosicion()));
-        lblPosicion.setBorder(BorderFactory.createEmptyBorder(3, 7, 3, 7));
+        lblPosicion.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
 
         JLabel lblEquipo = new JLabel("Equipo: " + jugador.getEquipo());
         lblEquipo.setForeground(Color.LIGHT_GRAY);
+        lblEquipo.setFont(new Font("Arial", Font.PLAIN, 14));
 
         JLabel lblEstado = new JLabel(formatoEstado(jugador.getEstado()));
         lblEstado.setForeground(colorEstado(jugador.getEstado()));
+        lblEstado.setFont(new Font("Arial", Font.BOLD, 14));
 
+        // ⭐ Valor más grande y visible
         JLabel lblValor = new JLabel("Valor: " + df.format(jugador.getValorMercado()) + " €");
         lblValor.setForeground(Color.WHITE);
+        lblValor.setFont(new Font("Arial", Font.BOLD, 17));
 
         panel.add(lblNombre);
-        panel.add(Box.createVerticalStrut(3));
+        panel.add(Box.createVerticalStrut(4));
         panel.add(lblPosicion);
         panel.add(lblEquipo);
         panel.add(lblEstado);
@@ -84,9 +90,11 @@ public class ItemMercado extends JPanel {
         JButton btn = new JButton("Fichar");
         btn.setBackground(new Color(200, 60, 60));
         btn.setForeground(Color.WHITE);
-        btn.setFont(new Font("Arial", Font.BOLD, 14));
+        btn.setFont(new Font("Arial", Font.BOLD, 15));
         btn.setFocusPainted(false);
-        btn.setPreferredSize(new Dimension(120, 40));
+
+        // Botón más grande
+        btn.setPreferredSize(new Dimension(130, 45));
 
         btn.addActionListener(e -> intentarFichaje());
 
@@ -133,9 +141,9 @@ public class ItemMercado extends JPanel {
 
     private String formatoEstado(Estado e) {
         return switch (e) {
-            case SANO -> "✔ Sano";
-            case LESIONADO -> "✘ Lesionado";
-            case SANCIONADO -> "⚠ Sancionado";
+            case SANO -> "+ Sano";
+            case LESIONADO -> "- Lesionado";
+            case SANCIONADO -> "◻ Sancionado";
         };
     }
 

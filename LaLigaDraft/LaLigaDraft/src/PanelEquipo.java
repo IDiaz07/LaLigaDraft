@@ -1,9 +1,7 @@
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-
 import java.awt.*;
-import java.awt.color.ColorSpace;
 import java.awt.event.*;
 import java.util.*;
 import java.util.List;
@@ -12,11 +10,9 @@ import java.util.stream.Collectors;
 public class PanelEquipo extends JPanel {
 
     private final Usuario usuario;
-    // Contenedor principal con CardLayout
     private final JPanel cards;
     private final CardLayout cardLayout;
 
-    // Antiguo campo (ahora será la vista "Alineación")
     private JPanel campo;
     private List<JLabel> labelsTitulares = new ArrayList<>();
     private JComboBox<String> comboFormacion;
@@ -40,7 +36,7 @@ public class PanelEquipo extends JPanel {
 
         // 2. Crear las dos secciones (Paneles)
         JPanel panelAlineacion = crearPanelAlineacion();
-        JPanel panelPlantilla = crearPanelPlantilla(); // Aquí se aplica la modificación
+        JPanel panelPlantilla = crearPanelPlantilla();
 
         cards.add(panelAlineacion, "Alineacion");
         cards.add(panelPlantilla, "Plantilla");
@@ -63,7 +59,10 @@ public class PanelEquipo extends JPanel {
         panel.setBackground(new Color(18, 18, 18));
 
         JButton btnAlineacion = new JButton("Alineación");
-        btnAlineacion.addActionListener(e -> cardLayout.show(cards, "Alineacion"));
+        btnAlineacion.addActionListener(e -> {
+            cardLayout.show(cards, "Alineacion");
+            refrescarCampo();
+        });
         panel.add(btnAlineacion);
 
         JButton btnPlantilla = new JButton("Plantilla");
@@ -80,7 +79,7 @@ public class PanelEquipo extends JPanel {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(Color.DARK_GRAY);
 
-        // ======================= CAMPO (Contenido existente) =======================
+        // ======================= CAMPO =======================
         campo = new JPanel(null) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -90,27 +89,29 @@ public class PanelEquipo extends JPanel {
 
                 g.setColor(Color.white);
                 int w = getWidth(), h = getHeight();
-                g.drawOval(w / 2 - 50, h / 2 - 50, 100, 100);
-                g.drawLine(0, h / 2, w, h / 2);
-                g.drawRect(w / 2 - 60, 0, 120, 60);
-                g.drawRect(w / 2 - 60, h - 60, 120, 60);
+                if (w > 0 && h > 0) {
+                    g.drawOval(w / 2 - 50, h / 2 - 50, 100, 100);
+                    g.drawLine(0, h / 2, w, h / 2);
+                    g.drawRect(w / 2 - 60, 0, 120, 60);
+                    g.drawRect(w / 2 - 60, h - 60, 120, 60);
+                }
             }
         };
-        campo.setPreferredSize(new Dimension(400, 400));
+        campo.setPreferredSize(new Dimension(600, 700));
         campo.setBorder(BorderFactory.createLineBorder(Color.white, 2));
         panel.add(campo, BorderLayout.CENTER);
 
-        // ======================= TITULARES (Contenido existente) =======================
+        // ======================= TITULARES =======================
         for (int i = 0; i < 11; i++) {
             JLabel lbl = crearLabelJugador(i);
             labelsTitulares.add(lbl);
             campo.add(lbl);
         }
 
-        // ======================= PANEL INFERIOR (Contenido existente) =======================
+        // ======================= PANEL INFERIOR =======================
         JPanel panelInferior = new JPanel(new FlowLayout(FlowLayout.LEFT));
         panelInferior.setBackground(new Color(18, 18, 18));
-        panelInferior.setPreferredSize(new Dimension(400, 50));
+        panelInferior.setPreferredSize(new Dimension(600, 50));
 
         comboFormacion = new JComboBox<>(new String[]{"4-4-2", "4-3-3", "3-5-2"});
         comboFormacion.addActionListener(e -> actualizarFormacion());
@@ -122,11 +123,10 @@ public class PanelEquipo extends JPanel {
 
     // -------------------------------------------------------------
     // Panel que muestra la Plantilla en formato visual de tabla/lista
-    // MODIFICADO: AÑADE EL VALOR TOTAL DEL EQUIPO
     // -------------------------------------------------------------
     private JPanel crearPanelPlantilla() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(new Color(18, 18, 18)); // Usamos el color oscuro uniforme
+        panel.setBackground(new Color(18, 18, 18));
 
         // 1. Obtener la plantilla completa y calcular el valor total
         List<Jugador> todaLaPlantilla = usuario.getJugadores().stream()
@@ -134,14 +134,12 @@ public class PanelEquipo extends JPanel {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        // Calcular la suma total del valor de mercado
         long valorTotal = todaLaPlantilla.stream()
                 .mapToLong(Jugador::getValorMercado)
                 .sum();
 
-        // Ordenar la plantilla por posición (POR, DEF, MED, DEL)
         todaLaPlantilla.sort(Comparator.comparing(Jugador::getPosicion)
-                                     .thenComparing(Jugador::getValorMercado, Comparator.reverseOrder()));
+                .thenComparing(Jugador::getValorMercado, Comparator.reverseOrder()));
 
         // 2. Preparar la tabla de jugadores 
         String[] nombresColumnas = {"Posición", "Nombre", "Valor (€)", "Puntos Totales"};
@@ -162,7 +160,7 @@ public class PanelEquipo extends JPanel {
 
         JTable tablaPlantilla = new JTable(modelo);
 
-        // Aplicar estilos (manteniendo el tema oscuro y moderno)
+        // Estilos
         tablaPlantilla.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         tablaPlantilla.setRowHeight(30);
         tablaPlantilla.setBackground(new Color(40, 40, 40));
@@ -188,36 +186,23 @@ public class PanelEquipo extends JPanel {
 
         panel.add(scrollPane, BorderLayout.CENTER);
 
-//        // Etiqueta de título
-//        JLabel titulo = new JLabel("Plantilla Completa", SwingConstants.CENTER);
-//        titulo.setFont(new Font("Segoe UI", Font.BOLD, 18));
-//        titulo.setForeground(Color.WHITE);
-//        titulo.setBorder(BorderFactory.createEmptyBorder(15, 0, 15, 0));
-//        panel.add(titulo, BorderLayout.NORTH);
-
         // 3. Panel para mostrar el Valor Total
         JPanel panelValorTotal = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        panelValorTotal.setBackground(new Color(18, 18, 18)); // Un gris un poco más claro para destacar
+        panelValorTotal.setBackground(new Color(18, 18, 18));
         panelValorTotal.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
 
         JLabel lblValorTotal = new JLabel(
             "Valor del Equipo: " + String.format("%,d", valorTotal) + " €"
         );
-        lblValorTotal.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        lblValorTotal.setForeground(new Color(255, 255, 255)); // Verde claro para destacar el dinero
-
+        lblValorTotal.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblValorTotal.setForeground(Color.WHITE);
         panelValorTotal.add(lblValorTotal);
         
-        // Añadir el nuevo panel al sur (SOUTH) del panel principal
         panel.add(panelValorTotal, BorderLayout.SOUTH);
 
         return panel;
     }
 
-    // -------------------------------------------------------------
-    // RESTO DE MÉTODOS SIN CAMBIOS
-    // -------------------------------------------------------------
-    
     /** Crear label de jugador con listener */
     private JLabel crearLabelJugador(int index) {
         JLabel lbl = new JLabel("◻", SwingConstants.CENTER);
@@ -273,90 +258,147 @@ public class PanelEquipo extends JPanel {
         while (suplentesActuales.size() < 4)
             suplentesActuales.add(jugadorPlaceholder(Posicion.MED));
     }
-
-    private List<Jugador> filtrarPorPosicion(List<Jugador> lista, Posicion pos) {
-        return lista.stream()
-                .filter(j -> j.getPosicion() == pos)
-                .collect(Collectors.toList());
-    }
-
-    /** Cambia la alineación según formación */
+    
     private void actualizarFormacion() {
+        System.out.println("🔄 Actualizando formación...");
+        
         String formacion = (String) comboFormacion.getSelectedItem();
-        if (formacion == null) return;
+        if (formacion == null) formacion = "4-4-2";
 
-        int def, med, del;
-        switch (formacion) {
-            case "4-3-3": def = 4; med = 3; del = 3; break;
-            case "3-5-2": def = 3; med = 5; del = 2; break;
-            default: def = 4; med = 4; del = 2; break;
-        }
-
+        // DEBUG: Ver jugadores del usuario
         List<Jugador> todos = usuario.getJugadores().stream()
                 .map(id -> GestorDatos.jugadores.get(id))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+        System.out.println("Jugadores usuario: " + todos.size());
 
-        List<Jugador> porteros = filtrarPorPosicion(todos, Posicion.POR);
-        List<Jugador> defensas = filtrarPorPosicion(todos, Posicion.DEF);
-        List<Jugador> medios = filtrarPorPosicion(todos, Posicion.MED);
-        List<Jugador> delanteros = filtrarPorPosicion(todos, Posicion.DEL);
+        String[] partes = formacion.split("-");
+        int def = Integer.parseInt(partes[0]);
+        int med = Integer.parseInt(partes[1]);
+        int del = Integer.parseInt(partes[2]);
+        
+        System.out.println("Formación: " + def + "-" + med + "-" + del);
 
+        // CLASIFICAR JUGADORES
+        List<Jugador> por = filtrarPorPosicion(todos, Posicion.POR);
+        List<Jugador> defen = filtrarPorPosicion(todos, Posicion.DEF);
+        List<Jugador> medi = filtrarPorPosicion(todos, Posicion.MED);
+        List<Jugador> delan = filtrarPorPosicion(todos, Posicion.DEL);
+        
+        System.out.println("POR:" + por.size() + " DEF:" + defen.size() + " MED:" + medi.size() + " DEL:" + delan.size());
+
+        // LIMPIAR
         titularesActuales.clear();
-        titularesActuales.add(porteros.isEmpty() ? jugadorPlaceholder(Posicion.POR) : porteros.get(0));
-        titularesActuales.addAll(defensas.stream().limit(def).collect(Collectors.toList()));
-        titularesActuales.addAll(medios.stream().limit(med).collect(Collectors.toList()));
-        titularesActuales.addAll(delanteros.stream().limit(del).collect(Collectors.toList()));
 
-        suplentesActuales = new ArrayList<>(todos);
+        // RELLENAR EXACTAMENTE 11 POSICIONES
+        // Posición 0: PORTERO
+        titularesActuales.add(por.isEmpty() ? jugadorPlaceholder(Posicion.POR) : por.get(0));
+        
+        // Posiciones 1-def: DEFENSAS  
+        for (int i = 0; i < def; i++) {
+            titularesActuales.add(i < defen.size() ? defen.get(i) : jugadorPlaceholder(Posicion.DEF));
+        }
+        
+        // Posiciones def+1 a def+med: MEDIOS
+        for (int i = 0; i < med; i++) {
+            titularesActuales.add(i < medi.size() ? medi.get(i) : jugadorPlaceholder(Posicion.MED));
+        }
+        
+        // Resto hasta 11: DELANTEROS
+        for (int i = titularesActuales.size(); i < 11; i++) {
+            titularesActuales.add(i - titularesActuales.size() < delan.size() ? 
+                delan.get(i - titularesActuales.size()) : jugadorPlaceholder(Posicion.DEL));
+        }
+
+        System.out.println("Titulares creados: " + titularesActuales.size());
+        for (int i = 0; i < titularesActuales.size(); i++) {
+            System.out.println("Pos " + i + ": " + titularesActuales.get(i).getNombre());
+        }
+
+        suplentesActuales.clear();
+        suplentesActuales.addAll(todos);
         suplentesActuales.removeAll(titularesActuales);
-
-        while (titularesActuales.size() < 11)
-            titularesActuales.add(jugadorPlaceholder(Posicion.MED));
 
         mostrarJugadoresEnCampo(formacion);
     }
 
-    private Jugador jugadorPlaceholder(Posicion pos) { return new Jugador(-1, "Vacante " + pos, "", 0, "", 0, 0, Estado.SANO, pos); }
-
     private void mostrarJugadoresEnCampo(String formacion) {
-        int w = campo.getWidth() > 0 ? campo.getWidth() : 400;
-        int h = campo.getHeight() > 0 ? campo.getHeight() : 400;
-
-        // Portero
-        colocarJugador(titularesActuales.get(0), labelsTitulares.get(0), w / 2 - 40, h - 50);
-
-        int def, med, del;
-        switch (formacion) {
-            case "4-3-3": def = 4; med = 3; del = 3; break;
-            case "3-5-2": def = 3; med = 5; del = 2; break;
-            default: def = 4; med = 4; del = 2; break;
+        System.out.println("📍 Mostrando en campo...");
+        
+        // OCULTAR TODOS LOS LABELS
+        for (JLabel lbl : labelsTitulares) {
+            lbl.setVisible(false);
+            lbl.setText(" ");
         }
 
-        colocarLinea(1, def, h * 3 / 4);
-        colocarLinea(1 + def, med, h / 2);
-        colocarLinea(1 + def + med, del, h / 5);
+        int w = Math.max(campo.getWidth(), 600);
+        int h = Math.max(campo.getHeight(), 700);
+
+        String[] partes = formacion.split("-");
+        int def = Integer.parseInt(partes[0]);
+        int med = Integer.parseInt(partes[1]);
+        int del = Integer.parseInt(partes[2]);
+
+        int index = 0;
+
+        // PORTERO (index 0)
+        if (index < titularesActuales.size() && index < labelsTitulares.size()) {
+            colocarJugador(titularesActuales.get(index), labelsTitulares.get(index), w/2-40, h-50);
+            index++;
+        }
+
+        // DEFENSAS (usar titularesActuales)
+        colocarLinea(def, h * 3/4, index);
+        index += def;
+
+        // MEDIOS
+        colocarLinea(med, h/2, index);
+        index += med;
+
+        // DELANTEROS
+        colocarLinea(del, h/5, index);
+
+        campo.repaint();
+        System.out.println("✅ Campo repintado");
     }
 
-    private void colocarLinea(int start, int cantidad, int y) {
-        int w = campo.getWidth() > 0 ? campo.getWidth() : 400;
+    private void colocarLinea(int cantidad, int y, int startIndex) {
+        int w = Math.max(campo.getWidth(), 600);
         int espacio = w / (cantidad + 1);
+
         for (int i = 0; i < cantidad; i++) {
-            int idx = start + i;
-            if (idx >= titularesActuales.size()) return;
+            int idx = startIndex + i;
+            if (idx >= labelsTitulares.size() || idx >= titularesActuales.size()) {
+                break;
+            }
+
             Jugador j = titularesActuales.get(idx);
             JLabel lbl = labelsTitulares.get(idx);
             int x = espacio * (i + 1) - 40;
-            colocarJugador(j, lbl, x, y);
+            
+            lbl.setBounds(x, y, 80, 25);
+            lbl.setText(j.getNombre());
+            lbl.setToolTipText(j.getPosicion() + " | " + j.getEquipo());
+            lbl.setVisible(true);
         }
+    }
+
+
+    
+    private List<Jugador> filtrarPorPosicion(List<Jugador> lista, Posicion pos) {
+        return lista.stream().filter(j -> j.getPosicion() == pos).collect(Collectors.toList());
+    }
+
+    private Jugador jugadorPlaceholder(Posicion pos) {
+        return new Jugador(-1, "Vacante " + pos.name(), "SIN", 25, "España", 0, 0, Estado.SANO, pos);
     }
 
     private void colocarJugador(Jugador j, JLabel lbl, int x, int y) {
         lbl.setLocation(x, y);
         lbl.setText(j.getNombre());
-        // Ajuste en el formato del valor para el Tooltip
         lbl.setToolTipText(j.getPosicion() + " | " + j.getEquipo() +
                 " | Valor: " + String.format("%,d", j.getValorMercado()) + "€ | Pts: " + j.getTotalPuntos());
+        lbl.setVisible(true);
     }
 
     /** Refresca el campo con los jugadores actuales (sin recalcular) */

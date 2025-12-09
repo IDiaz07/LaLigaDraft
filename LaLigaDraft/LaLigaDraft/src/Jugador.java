@@ -8,8 +8,8 @@ public class Jugador {
 
     private int valorMercado;
     private int valorInicial;
-    private Estado estado;       // 🔹 en vez de String salud
-    private Posicion posicion;  
+    private Estado estado;
+    private Posicion posicion;
     private Integer[] puntosPorJornada;
 
     // Estadísticas adicionales
@@ -28,7 +28,7 @@ public class Jugador {
         this.numeroCamiseta = numeroCamiseta;
 
         this.valorMercado = valorMercado;
-        this.valorInicial = valorMercado;
+        this.valorInicial = valorMercado;  // ✅ Inicializado correctamente
         this.estado = estado;
         this.posicion = posicion;
 
@@ -56,17 +56,20 @@ public class Jugador {
     public int getTarjetasAmarillas() { return tarjetasAmarillas; }
     public int getTarjetasRojas() { return tarjetasRojas; }
 
-    // ----------------- SETTERS -----------------
+    // ----------------- SETTERS ✅ AGREGADOS -----------------
     public void setValorMercado(int valor) { this.valorMercado = valor; }
+    public void setValorInicial(int valor) { this.valorInicial = valor; }  // ✅ AÑADIDO
     public void setEstado(Estado estado) { this.estado = estado; }
-    public void addGol() { this.goles++; }
-    public void addAsistencia() { this.asistencias++; }
-    public void addTarjetaAmarilla() { this.tarjetasAmarillas++; }
-    public void addTarjetaRoja() { this.tarjetasRojas++; }
     public void setGoles(int goles) { this.goles = goles; }
     public void setAsistencias(int asistencias) { this.asistencias = asistencias; }
     public void setTarjetasAmarillas(int tA) { this.tarjetasAmarillas = tA; }
     public void setTarjetasRojas(int tR) { this.tarjetasRojas = tR; }
+
+    // Métodos adicionales
+    public void addGol() { this.goles++; }
+    public void addAsistencia() { this.asistencias++; }
+    public void addTarjetaAmarilla() { this.tarjetasAmarillas++; }
+    public void addTarjetaRoja() { this.tarjetasRojas++; }
 
     // ----------------- LÓGICA -----------------
     public void setPuntosEnJornada(int jornada, Integer puntos) {
@@ -82,7 +85,7 @@ public class Jugador {
         return total;
     }
 
-    // ----------------- TXT EXPORT/IMPORT -----------------
+    // ----------------- TXT EXPORT/IMPORT ✅ CORREGIDO -----------------
     public String toFileString() {
         StringBuilder sb = new StringBuilder();
         sb.append(id).append(";")
@@ -93,7 +96,7 @@ public class Jugador {
           .append(numeroCamiseta).append(";")
           .append(valorMercado).append(";")
           .append(valorInicial).append(";")
-          .append(estado).append(";") // 🔹 exportamos enum como texto
+          .append(estado).append(";")
           .append(posicion).append(";")
           .append(goles).append(";")
           .append(asistencias).append(";")
@@ -119,23 +122,22 @@ public class Jugador {
         int numeroCamiseta = Integer.parseInt(partes[5]);
         int valorMercado = Integer.parseInt(partes[6]);
         int valorInicial = Integer.parseInt(partes[7]);
-        Estado estado = Estado.valueOf(partes[8]);  // 🔹 leer enum
+        Estado estado = Estado.valueOf(partes[8]);
         Posicion pos = Posicion.valueOf(partes[9]);
-        int propietario = Integer.parseInt(partes[10]);
-        int goles = Integer.parseInt(partes[11]);
-        int asistencias = Integer.parseInt(partes[12]);
-        int amarillas = Integer.parseInt(partes[13]);
-        int rojas = Integer.parseInt(partes[14]);
+        int goles = Integer.parseInt(partes[10]);
+        int asistencias = Integer.parseInt(partes[11]);
+        int amarillas = Integer.parseInt(partes[12]);
+        int rojas = Integer.parseInt(partes[13]);
 
         Jugador j = new Jugador(id, nombre, equipo, edad, nacionalidad, numeroCamiseta, valorMercado, estado, pos);
-        j.valorInicial = valorInicial;
-        j.goles = goles;
-        j.asistencias = asistencias;
-        j.tarjetasAmarillas = amarillas;
-        j.tarjetasRojas = rojas;
+        j.setValorInicial(valorInicial);  // ✅ Usar setter
+        j.setGoles(goles);
+        j.setAsistencias(asistencias);
+        j.setTarjetasAmarillas(amarillas);
+        j.setTarjetasRojas(rojas);
 
-        if (partes.length >= 16) {
-            String[] puntos = partes[15].split(",");
+        if (partes.length >= 15) {
+            String[] puntos = partes[14].split(",");
             for (int i = 0; i < puntos.length && i < 32; i++) {
                 if (!puntos[i].equals("null")) {
                     j.puntosPorJornada[i] = Integer.parseInt(puntos[i]);

@@ -1,63 +1,76 @@
 import java.awt.*;
 import java.awt.event.*;
-
 import javax.swing.*;
 
 public class VentanaIniciarSesion extends JFrame {
-	
-	private JTextField usuario;
+    
+    private JTextField usuario;
     private JPasswordField contraseña;
 
-	public VentanaIniciarSesion() {
-		setTitle("Inicio de Sesion");
-	    setSize(400, 600);
-	    setLocationRelativeTo(null);
-	    setDefaultCloseOperation(EXIT_ON_CLOSE);
-	    setResizable(false);
-	    
-	    JPanel panelPrincipal = new JPanel();
-	    panelPrincipal.setLayout(new BorderLayout());
-	    panelPrincipal.setBackground(new Color(18, 18, 18));
-	    
-	    JLabel labelIniciarSesion = new JLabel("INICIO DE SESION", SwingConstants.CENTER);
-	    labelIniciarSesion.setFont(new Font("Arial", Font.BOLD, 20));
-	    labelIniciarSesion.setBorder(BorderFactory.createEmptyBorder(40, 10, 40, 10));
-	    labelIniciarSesion.setForeground(Color.WHITE);
+    public VentanaIniciarSesion() {
+
+        setTitle("Inicio de Sesion");
+        setSize(600, 900); // ⬅ tamaño grande
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setResizable(false);
+
+        JPanel panelPrincipal = new JPanel(new BorderLayout());
+        panelPrincipal.setBackground(new Color(18, 18, 18));
+
+        // =============================
+        //        TÍTULO
+        // =============================
+        JLabel labelIniciarSesion = new JLabel("INICIO DE SESIÓN", SwingConstants.CENTER);
+        labelIniciarSesion.setFont(new Font("Arial", Font.BOLD, 32));
+        labelIniciarSesion.setBorder(BorderFactory.createEmptyBorder(80, 10, 40, 10));
+        labelIniciarSesion.setForeground(Color.WHITE);
         panelPrincipal.add(labelIniciarSesion, BorderLayout.NORTH);
-        
+
+        // =============================
+        //        CAMPOS CENTRALES
+        // =============================
         JPanel panelCampos = new JPanel();
-        panelCampos.setLayout(new GridLayout(4, 1, 20, 20));
-        panelCampos.setBorder(BorderFactory.createEmptyBorder(150, 50, 5, 50));
+        panelCampos.setLayout(new BoxLayout(panelCampos, BoxLayout.Y_AXIS));
         panelCampos.setBackground(new Color(18, 18, 18));
-        
+        panelCampos.setBorder(BorderFactory.createEmptyBorder(50, 0, 0, 0));
+
         usuario = new JTextField();
         contraseña = new JPasswordField();
-        
+
+        // Tamaño proporcional
+        usuario.setMaximumSize(new Dimension(400, 45));
+        contraseña.setMaximumSize(new Dimension(400, 45));
+
+        estiloCampo(usuario);
+        estiloCampo(contraseña);
+
         addPlaceholder(usuario, "Nombre de Usuario");
         addPlaceholder(contraseña, "Contraseña");
-	    
+
+        usuario.setAlignmentX(Component.CENTER_ALIGNMENT);
+        contraseña.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         panelCampos.add(usuario);
+        panelCampos.add(Box.createVerticalStrut(20));
         panelCampos.add(contraseña);
-        panelPrincipal.add(panelCampos);
-        
-     // Panel para los botones
-        
-        JPanel panelBotones = new JPanel();
-        panelBotones.setLayout(new GridLayout(1, 2, 20, 20));
-        panelBotones.setBorder(BorderFactory.createEmptyBorder(5, 50, 100, 50));
+
+        panelPrincipal.add(panelCampos, BorderLayout.CENTER);
+
+        // =============================
+        //        BOTONES ABAJO
+        // =============================
+        JPanel panelBotones = new JPanel(new GridLayout(1, 2, 40, 40));
+        panelBotones.setBorder(BorderFactory.createEmptyBorder(0, 100, 150, 100));
         panelBotones.setBackground(new Color(18, 18, 18));
 
-        JButton botonAtras = new JButton("Atras");
-        botonAtras.setBackground(new Color(231, 76, 60));
-        botonAtras.setForeground(Color.WHITE);
-        
-        JButton botonIniciarSesion = new JButton("Iniciar Sesion");
-        botonIniciarSesion.setBackground(new Color(231, 76, 60));
-        botonIniciarSesion.setForeground(Color.WHITE);
+        JButton botonAtras = crearBoton("Atrás");
+        JButton botonIniciarSesion = crearBoton("Iniciar Sesión");
 
         panelBotones.add(botonAtras);
         panelBotones.add(botonIniciarSesion);
-        
+
+        // Acción botones
         botonIniciarSesion.addActionListener((ActionEvent e) -> {
             String nombreUsuario = usuario.getText().trim();
             String pass = new String(contraseña.getPassword()).trim();
@@ -82,98 +95,90 @@ public class VentanaIniciarSesion extends JFrame {
                 return;
             }
 
-            // 🔹 Asignar equipo inicial si no tiene jugadores
             GestorDatos.asignarEquipoInicial(usuarioEncontrado);
 
-            // 🔹 Determinar flujo según ligaActualId
             if (usuarioEncontrado.getLigas() != null && !usuarioEncontrado.getLigas().isEmpty()) {
                 if (usuarioEncontrado.getLigaActualId() == -1) {
-                    // Asignar la primera liga que tenga
                     usuarioEncontrado.setLigaActualId(usuarioEncontrado.getLigas().get(0));
                 }
-                // Abrir VentanaPrincipal directamente
                 dispose();
                 SwingUtilities.invokeLater(() -> new VentanaPrincipal(usuarioEncontrado).setVisible(true));
             } else {
-                // No tiene ligas -> abrir selector
                 dispose();
                 SwingUtilities.invokeLater(() -> new VentanaSeleccionLiga(usuarioEncontrado).setVisible(true));
             }
         });
 
+        botonAtras.addActionListener(e -> abrirVentanaInicio());
 
-        botonAtras.addActionListener((ActionEvent e) -> {
-            abrirVentanaInicio();
-        });
-        
-        
-	    add(panelPrincipal, BorderLayout.CENTER);
-	    add(panelBotones, BorderLayout.SOUTH);
-	}
-	
-	
-	
-	// Método genérico para JTextField
-	public static void addPlaceholder(JTextField textField, String placeholder) {
+        add(panelPrincipal, BorderLayout.CENTER);
+        add(panelBotones, BorderLayout.SOUTH);
+    }
+
+    // -------------------- ESTILO CAMPOS --------------------
+    private void estiloCampo(JTextField field) {
+        field.setBackground(new Color(28, 28, 28));
+        field.setForeground(Color.WHITE);
+        field.setBorder(BorderFactory.createEmptyBorder(10, 12, 10, 12));
+    }
+
+    private JButton crearBoton(String txt) {
+        JButton b = new JButton(txt);
+        b.setBackground(new Color(231, 76, 60));
+        b.setForeground(Color.WHITE);
+        b.setFont(new Font("Arial", Font.BOLD, 22));
+        b.setFocusPainted(false);
+        return b;
+    }
+
+    // -------------------- PLACEHOLDERS --------------------
+    public static void addPlaceholder(JTextField textField, String placeholder) {
         textField.setText(placeholder);
-        textField.setForeground(Color.WHITE);
-        textField.setBackground(new Color(28, 28, 28));
+        textField.setForeground(Color.GRAY);
 
         textField.addFocusListener(new FocusAdapter() {
-            @Override
             public void focusGained(FocusEvent e) {
                 if (textField.getText().equals(placeholder)) {
                     textField.setText("");
                     textField.setForeground(Color.WHITE);
                 }
             }
-            @Override
+
             public void focusLost(FocusEvent e) {
                 if (textField.getText().isEmpty()) {
                     textField.setText(placeholder);
-                    textField.setForeground(Color.WHITE);
+                    textField.setForeground(Color.GRAY);
                 }
             }
         });
     }
 
-    // Versión especial para JPasswordField
     public static void addPlaceholder(JPasswordField passwordField, String placeholder) {
-        passwordField.setEchoChar((char)0); // Mostrar el texto en claro
+        passwordField.setEchoChar((char)0);
         passwordField.setText(placeholder);
-        passwordField.setForeground(Color.WHITE);
-        passwordField.setBackground(new Color(28, 28, 28));
-        
+        passwordField.setForeground(Color.GRAY);
 
         passwordField.addFocusListener(new FocusAdapter() {
-            @Override
             public void focusGained(FocusEvent e) {
-                String pass = new String(passwordField.getPassword());
-                if (pass.equals(placeholder)) {
+                if (new String(passwordField.getPassword()).equals(placeholder)) {
                     passwordField.setText("");
                     passwordField.setForeground(Color.WHITE);
-                    passwordField.setEchoChar('•'); // Restaurar bullets
+                    passwordField.setEchoChar('•');
                 }
             }
-            @Override
+
             public void focusLost(FocusEvent e) {
-                String pass = new String(passwordField.getPassword());
-                if (pass.isEmpty()) {
+                if (new String(passwordField.getPassword()).isEmpty()) {
                     passwordField.setEchoChar((char)0);
                     passwordField.setText(placeholder);
-                    passwordField.setForeground(Color.WHITE);
+                    passwordField.setForeground(Color.GRAY);
                 }
             }
         });
     }
 
-    
     private void abrirVentanaInicio() {
-        SwingUtilities.invokeLater(() -> {
-            VentanaInicio ventanaI = new VentanaInicio();
-            ventanaI.setVisible(true);
-        });
+        new VentanaInicio().setVisible(true);
         dispose();
     }
-    
 }

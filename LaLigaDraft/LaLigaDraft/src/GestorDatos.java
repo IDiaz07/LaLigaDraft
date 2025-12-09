@@ -1,5 +1,6 @@
 import java.sql.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class GestorDatos {
 
@@ -62,6 +63,7 @@ public class GestorDatos {
                 );
             """);
 
+            // OJO: nombres de columnas usuarioId / ligaId (camelCase)
             st.execute("""
                 CREATE TABLE IF NOT EXISTS usuarios_jugadores (
                     usuario_id INTEGER,
@@ -73,28 +75,28 @@ public class GestorDatos {
                     FOREIGN KEY(liga_id) REFERENCES ligas(id)
                 );
             """);
-            
-            st.execute("""
-            	    CREATE TABLE IF NOT EXISTS usuarios_ligas (
-            	        usuario_id INTEGER,
-            	        liga_id INTEGER,
-            	        PRIMARY KEY(usuario_id, liga_id),
-            	        FOREIGN KEY(usuario_id) REFERENCES usuarios(id),
-            	        FOREIGN KEY(liga_id) REFERENCES ligas(id)
-            	    );
-            	""");
-            
-            st.execute("""
-            	    CREATE TABLE IF NOT EXISTS ligas_mercado (
-            	        liga_id INTEGER,
-            	        jugador_id INTEGER,
-            	        PRIMARY KEY(liga_id, jugador_id),
-            	        FOREIGN KEY(liga_id) REFERENCES ligas(id),
-            	        FOREIGN KEY(jugador_id) REFERENCES jugadores(id)
-            	    );
-            	""");
 
+            st.execute("""
+                CREATE TABLE IF NOT EXISTS usuarios_ligas (
+                    usuarioId INTEGER,
+                    ligaId INTEGER,
+                    PRIMARY KEY(usuarioId, ligaId),
+                    FOREIGN KEY(usuarioId) REFERENCES usuarios(id),
+                    FOREIGN KEY(ligaId) REFERENCES ligas(id)
+                );
+            """);
 
+            // no creamos ligas_mercado aquí porque podrías haberla creado manualmente,
+            // pero si quieres que se cree automáticamente, descomenta lo siguiente:
+            st.execute("""
+                CREATE TABLE IF NOT EXISTS ligas_mercado (
+                    liga_id INTEGER,
+                    jugador_id INTEGER,
+                    PRIMARY KEY(liga_id, jugador_id),
+                    FOREIGN KEY(liga_id) REFERENCES ligas(id),
+                    FOREIGN KEY(jugador_id) REFERENCES jugadores(id)
+                );
+            """);
 
             System.out.println("[OK] Tablas creadas o existentes.");
 
@@ -103,7 +105,7 @@ public class GestorDatos {
         }
     }
 
-    // -------------------- CARGAR DATOS DESDE DB --------------------
+    // -------------------- CARGAR DATOS --------------------
     public static Map<Integer, Usuario> cargarUsuarios() {
         usuarios.clear();
         try (Connection conn = getConnection();
@@ -111,16 +113,15 @@ public class GestorDatos {
              ResultSet rs = st.executeQuery("SELECT * FROM usuarios")) {
 
             while (rs.next()) {
-            	Usuario u = new Usuario(
-            	        rs.getInt("id"),
-            	        rs.getString("nombre"),
-            	        rs.getString("email"),
-            	        rs.getString("telefono"),
-            	        rs.getString("contrasena")
-
-            	);
-            	u.setEquipoMostrado(rs.getBoolean("equipoMostrado"));
-            	u.setLigaActualId(rs.getInt("ligaActualId"));
+                Usuario u = new Usuario(
+                        rs.getInt("id"),
+                        rs.getString("nombre"),
+                        rs.getString("email"),
+                        rs.getString("telefono"),
+                        rs.getString("contrasena")
+                );
+                u.setEquipoMostrado(rs.getBoolean("equipoMostrado"));
+                u.setLigaActualId(rs.getInt("ligaActualId"));
                 usuarios.put(u.getId(), u);
             }
 
@@ -138,30 +139,29 @@ public class GestorDatos {
 
             while (rs.next()) {
                 Jugador j = new Jugador(
-                    rs.getInt("id"),
-                    rs.getString("nombre"),
-                    rs.getString("equipo"),
-                    rs.getInt("edad"),
-                    rs.getString("nacionalidad"),
-                    rs.getInt("numeroCamiseta"),
-                    rs.getInt("valorMercado"),
-                    Estado.valueOf(rs.getString("estado")),
-                    Posicion.valueOf(rs.getString("posicion"))
+                        rs.getInt("id"),
+                        rs.getString("nombre"),
+                        rs.getString("equipo"),
+                        rs.getInt("edad"),
+                        rs.getString("nacionalidad"),
+                        rs.getInt("numeroCamiseta"),
+                        rs.getInt("valorMercado"),
+                        Estado.valueOf(rs.getString("estado")),
+                        Posicion.valueOf(rs.getString("posicion"))
                 );
 
-                // Cargar estadísticas
-                j.setValorMercado(rs.getInt("valorInicial"));
+                j.setValorInicial(rs.getInt("valorInicial"));
                 j.setGoles(rs.getInt("goles"));
                 j.setAsistencias(rs.getInt("asistencias"));
                 j.setTarjetasAmarillas(rs.getInt("tarjetasAmarillas"));
                 j.setTarjetasRojas(rs.getInt("tarjetasRojas"));
 
-                // Cargar puntos por jornada
                 String puntosStr = rs.getString("puntosPorJornada");
                 if (puntosStr != null && !puntosStr.isEmpty()) {
                     String[] partes = puntosStr.split(",");
                     for (int i = 0; i < partes.length && i < 32; i++) {
-                        j.getPuntosPorJornada()[i] = partes[i].equals("null") ? null : Integer.parseInt(partes[i]);
+                        j.getPuntosPorJornada()[i] =
+                                "null".equals(partes[i]) ? null : Integer.parseInt(partes[i]);
                     }
                 }
 
@@ -174,32 +174,45 @@ public class GestorDatos {
         return jugadores;
     }
 
+    /**
+     * Carga todas las ligas y devuelve el mapa de ligas.
+     * Se encarga también de recuperar el mercado desde la tabla ligas_mercado.
+     */
     public static Map<Integer, Liga> cargarLigas() {
         ligas.clear();
 
+        String sql = "SELECT * FROM ligas";
+
         try (Connection conn = getConnection();
-             Statement st = conn.createStatement();
-             ResultSet rs = st.executeQuery("SELECT * FROM ligas")) {
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                Liga l = new Liga(
-                        rs.getInt("id"),
-                        rs.getString("nombre"),
-                        rs.getBoolean("publica"),
-                        rs.getString("codigoInvitacion")
+                Liga liga = new Liga(
+                    rs.getInt("id"),
+                    rs.getString("nombre"),
+                    rs.getBoolean("publica"),
+                    rs.getString("codigoInvitacion") // column name as created
                 );
 
-                l.setUltimaActualizacionMercado(rs.getLong("ultimaActualizacionMercado"));
-                ligas.put(l.getId(), l);
+                liga.setUltimaActualizacionMercado(rs.getLong("ultimaActualizacionMercado"));
+                ligas.put(liga.getId(), liga);
             }
 
-            String sqlMercado = "SELECT jugador_id FROM ligas_mercado WHERE liga_id = ?";
-            try (PreparedStatement ps = conn.prepareStatement(sqlMercado)) {
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-                for (Liga l : ligas.values()) {
+        // Cargar mercado guardado (si existe la tabla ligas_mercado)
+        String sqlMercado = "SELECT jugador_id FROM ligas_mercado WHERE liga_id = ?";
 
-                    ps.setInt(1, l.getId());
-                    ResultSet rm = ps.executeQuery();
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sqlMercado)) {
+
+            for (Liga l : ligas.values()) {
+
+                ps.setInt(1, l.getId());
+                try (ResultSet rm = ps.executeQuery()) {
 
                     l.getMercadoIds().clear();
 
@@ -209,31 +222,18 @@ public class GestorDatos {
                 }
             }
 
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (SQLException e) {
+            // Si la tabla no existe o hay problemas, lo mostramos pero no rompemos la carga.
+            System.err.println("[WARN] no se pudo cargar ligas_mercado: " + e.getMessage());
         }
-
-
-        for (Liga l : ligas.values()) {
-
-            boolean mercadoVacio = l.getMercadoIds() == null || l.getMercadoIds().isEmpty();
-
-            if (mercadoVacio) {
-                System.out.println("⚠ Mercado vacío detectado en liga " + l.getNombre() + ". Creando nuevo mercado...");
-                l.generarMercadoRandom();
-            }
-        }
-
-        guardarLigas();
 
         return ligas;
     }
 
-    
-    public static void cargarUsuariosLiga(Liga liga) {
 
+    public static void cargarUsuariosLiga(Liga liga) {
         String sql = """
-            SELECT u.id, u.nombre, u.email, u.telefono, u.contrasena, 
+            SELECT u.id, u.nombre, u.email, u.telefono, u.contrasena,
                    u.saldo, u.equipoMostrado, u.ligaActualId
             FROM usuarios u
             JOIN usuarios_ligas ul ON u.id = ul.usuarioId
@@ -249,12 +249,9 @@ public class GestorDatos {
             liga.getUsuariosIds().clear();
 
             while (rs.next()) {
-
                 int id = rs.getInt("id");
 
-                // Si no está cargado en memoria
                 if (!usuarios.containsKey(id)) {
-
                     Usuario u = new Usuario(
                             id,
                             rs.getString("nombre"),
@@ -262,16 +259,12 @@ public class GestorDatos {
                             rs.getString("telefono"),
                             rs.getString("contrasena")
                     );
-
                     u.setEquipoMostrado(rs.getBoolean("equipoMostrado"));
                     u.setLigaActualId(rs.getInt("ligaActualId"));
-
                     usuarios.put(id, u);
                 }
 
                 liga.addUsuario(id);
-
-                // Cargar jugadores del usuario
                 usuarios.get(id).setJugadores(cargarJugadoresUsuario(id));
             }
 
@@ -280,12 +273,46 @@ public class GestorDatos {
         }
     }
 
+    // -------------------- GUARDAR PLANTILLAS --------------------
+    public static void guardarPlantillas() {
+        String sqlInsert = """
+            INSERT OR IGNORE INTO usuarios_jugadores (usuario_id, jugador_id, liga_id)
+            VALUES (?, ?, ?)
+        """;
 
-    // -------------------- GUARDAR DATOS --------------------
-    public static Usuario registrarUsuario(String nombre, String email, String telefono, String contrasena, int saldoInicial) {
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sqlInsert)) {
+
+            int total = 0;
+            for (Usuario u : usuarios.values()) {
+                List<Integer> jug = u.getJugadores();
+                if (jug == null || jug.isEmpty()) continue;
+
+                int ligaId = u.getLigaActualId();
+                if (ligaId == 0 && !ligas.isEmpty()) {
+                    ligaId = ligas.keySet().iterator().next();
+                    u.setLigaActualId(ligaId);
+                }
+
+                Set<Integer> unicos = new HashSet<>(jug);
+                for (int idJ : unicos) {
+                    ps.setInt(1, u.getId());
+                    ps.setInt(2, idJ);
+                    ps.setInt(3, ligaId);
+                    total += ps.executeUpdate();
+                }
+            }
+            System.out.println("✅ Plantillas guardadas: " + total + " registros únicos");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // -------------------- GUARDAR ENTIDADES --------------------
+    public static Usuario registrarUsuario(String nombre, String email, String telefono,
+                                           String contrasena, int saldoInicial) {
         try (Connection conn = getConnection()) {
 
-            // 1. Obtener nuevo ID
             int nuevoId = 1;
             String sqlMaxId = "SELECT COALESCE(MAX(id),0)+1 AS nuevoId FROM usuarios";
             try (PreparedStatement ps = conn.prepareStatement(sqlMaxId);
@@ -293,16 +320,12 @@ public class GestorDatos {
                 if (rs.next()) nuevoId = rs.getInt("nuevoId");
             }
 
-            // 2. Crear usuario
             Usuario nuevo = new Usuario(nuevoId, nombre, email, telefono, contrasena);
-            
-            // IMPORTANTE: Le damos el saldo inicial para su liga actual (o una por defecto)
-            // Como no sabemos la liga aún, lo guardamos en el mapa temporalmente o usamos el saldoInicial
-            nuevo.actualizarSaldo(-1, saldoInicial); // -1 o el ID que quieras por defecto
+            nuevo.actualizarSaldo(-1, saldoInicial);
 
-            // 3. Insertar en BD
             String sqlInsert = """
-                INSERT INTO usuarios (id, nombre, email, telefono, contrasena, saldo, equipoMostrado, ligaActualId)
+                INSERT INTO usuarios (id, nombre, email, telefono,
+                                      contrasena, saldo, equipoMostrado, ligaActualId)
                 VALUES (?, ?, ?, ?, ?, ?, ?, NULL)
             """;
 
@@ -312,10 +335,7 @@ public class GestorDatos {
                 ps.setString(3, nuevo.getEmail());
                 ps.setString(4, nuevo.getTelefono());
                 ps.setString(5, nuevo.getContrasena());
-                
-                ps.setInt(6, saldoInicial); 
-                // -----------------------
-                
+                ps.setInt(6, saldoInicial);
                 ps.setBoolean(7, nuevo.isEquipoMostrado());
                 ps.executeUpdate();
             }
@@ -329,7 +349,7 @@ public class GestorDatos {
             return null;
         }
     }
-    
+
     public static void guardarUsuarios() {
         String sql = """
             UPDATE usuarios
@@ -346,11 +366,7 @@ public class GestorDatos {
                 ps.setString(2, u.getEmail());
                 ps.setString(3, u.getTelefono());
                 ps.setString(4, u.getContrasena());
-
-               
-                ps.setInt(5, u.getSaldo(u.getLigaActualId())); 
-                // -----------------------
-
+                ps.setInt(5, u.getSaldo(u.getLigaActualId()));
                 ps.setBoolean(6, u.isEquipoMostrado());
                 ps.setInt(7, u.getLigaActualId());
                 ps.setInt(8, u.getId());
@@ -362,7 +378,6 @@ public class GestorDatos {
             e.printStackTrace();
         }
     }
-
 
     public static void guardarJugadores() {
         String sql = """
@@ -379,7 +394,6 @@ public class GestorDatos {
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             for (Jugador j : jugadores.values()) {
-
                 ps.setInt(1, j.getId());
                 ps.setString(2, j.getNombre());
                 ps.setString(3, j.getEquipo());
@@ -397,7 +411,6 @@ public class GestorDatos {
                 ps.setInt(13, j.getTarjetasAmarillas());
                 ps.setInt(14, j.getTarjetasRojas());
 
-                // Convertir puntosPorJornada → CSV
                 StringBuilder sb = new StringBuilder();
                 Integer[] puntos = j.getPuntosPorJornada();
                 for (int i = 0; i < puntos.length; i++) {
@@ -467,24 +480,18 @@ public class GestorDatos {
     }
 
 
+    // -------------------- LIGAS --------------------
     public static Liga buscarLigaPublicaDisponible() {
         for (Liga l : ligas.values()) {
-            if (l.isPublica()) {
-                return l;
-            }
+            if (l.isPublica()) return l;
         }
         return null;
     }
-    
+
     public static Liga registrarLiga(String nombre, boolean publica, String codigo) {
-        // 1️⃣ Comprobar si ya existe
         for (Liga l : ligas.values()) {
             if (l.getNombre().equalsIgnoreCase(nombre)) {
-                // Para ligas privadas, también debe coincidir el código
-                if (!publica && Objects.equals(l.getCodigoInvitacion(), codigo)) {
-                    return null; // Ya existe, no crear
-                }
-                // Para públicas, solo con el mismo nombre no permitimos duplicado
+                if (!publica && Objects.equals(l.getCodigoInvitacion(), codigo)) return null;
                 if (publica) return null;
             }
         }
@@ -502,18 +509,14 @@ public class GestorDatos {
             ps.setBoolean(2, publica);
             ps.setString(3, codigo);
             ps.setLong(4, ahora);
-
             ps.executeUpdate();
 
-            // Obtener ID generado
             ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) {
                 int id = rs.getInt(1);
-
                 Liga liga = new Liga(id, nombre, publica, codigo);
                 liga.setUltimaActualizacionMercado(ahora);
                 ligas.put(id, liga);
-
                 return liga;
             }
 
@@ -522,7 +525,7 @@ public class GestorDatos {
         }
         return null;
     }
-    
+
     public static void agregarUsuarioALiga(int userId, int ligaId) {
         String sql = "INSERT OR IGNORE INTO usuarios_ligas (usuarioId, ligaId) VALUES (?, ?)";
 
@@ -546,10 +549,9 @@ public class GestorDatos {
         }
     }
 
-    
+    // -------------------- PLANTILLAS USUARIO --------------------
     public static List<Integer> cargarJugadoresUsuario(int idUsuario) {
         List<Integer> lista = new ArrayList<>();
-
         String sql = "SELECT jugador_id FROM usuarios_jugadores WHERE usuario_id = ?";
 
         try (Connection conn = getConnection();
@@ -557,24 +559,23 @@ public class GestorDatos {
 
             ps.setInt(1, idUsuario);
             ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                lista.add(rs.getInt("jugador_id"));
-            }
+            while (rs.next()) lista.add(rs.getInt("jugador_id"));
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return lista;
     }
 
-
-    // -------------------- ASIGNAR JUGADORES A USUARIOS --------------------
     public static void asignarUsuariosJugadores() {
-        for (Usuario usuario : usuarios.values()) { // suponiendo que tienes un Map<Integer, Usuario> usuarios
+        for (Usuario usuario : usuarios.values()) {
             if (usuario.getJugadores() == null || usuario.getJugadores().isEmpty()) {
-                asignarEquipoInicial(usuario); // reutilizamos la función que crea 15 jugadores
+                List<Integer> ids = cargarJugadoresUsuario(usuario.getId());
+                if (ids == null || ids.isEmpty()) {
+                    asignarEquipoInicial(usuario);
+                } else {
+                    usuario.setJugadores(ids);
+                }
             }
         }
     }
@@ -588,23 +589,20 @@ public class GestorDatos {
         while (intentos < MAX_INTENTOS) {
             listaIds.clear();
 
-            // Filtrar jugadores por posición
             List<Jugador> porteros = new ArrayList<>();
             List<Jugador> defensas = new ArrayList<>();
             List<Jugador> mediocentros = new ArrayList<>();
             List<Jugador> delanteros = new ArrayList<>();
 
-            // Obtener jugadores ya ocupados por otros usuarios
             Set<Integer> idsOcupados = new HashSet<>();
-            for (Usuario u : GestorDatos.usuarios.values()) {
+            for (Usuario u : usuarios.values()) {
                 if (u.getId() != usuario.getId() && u.getJugadores() != null) {
                     idsOcupados.addAll(u.getJugadores());
                 }
             }
 
-            // Separar jugadores disponibles por posición
-            for (Jugador j : GestorDatos.jugadores.values()) {
-                if (idsOcupados.contains(j.getId())) continue; // ya asignado
+            for (Jugador j : jugadores.values()) {
+                if (idsOcupados.contains(j.getId())) continue;
                 switch (j.getPosicion()) {
                     case POR -> porteros.add(j);
                     case DEF -> defensas.add(j);
@@ -613,13 +611,11 @@ public class GestorDatos {
                 }
             }
 
-            // Mezclar cada lista
             Collections.shuffle(porteros, rand);
             Collections.shuffle(defensas, rand);
             Collections.shuffle(mediocentros, rand);
             Collections.shuffle(delanteros, rand);
 
-            // Seleccionar jugadores por posición
             int count;
 
             count = Math.min(2, porteros.size());
@@ -634,91 +630,74 @@ public class GestorDatos {
             count = Math.min(3, delanteros.size());
             for (int i = 0; i < count; i++) listaIds.add(delanteros.get(i).getId());
 
-            // Calcular valor total
             int valorTotal = 0;
             for (int idJ : listaIds) {
-                Jugador j = GestorDatos.jugadores.get(idJ);
+                Jugador j = jugadores.get(idJ);
                 if (j != null) valorTotal += j.getValorMercado();
             }
 
-            // Verificar rango
             if (valorTotal >= 110_000_000 && valorTotal <= 140_000_000) {
                 usuario.setJugadores(listaIds);
+                System.out.println("✅ Equipo asignado a " + usuario.getNombre() +
+                        ": " + (valorTotal / 1_000_000) + "M€");
                 return;
             }
 
             intentos++;
         }
 
-        // Si no se encuentra combinación válida tras MAX_INTENTOS, asignar la última tentativa
         usuario.setJugadores(listaIds);
-        System.out.println("[WARN] No se encontró combinación exacta para usuario " + usuario.getNombre() +
-                           ", valor total: " + listaIds.stream().mapToInt(id -> GestorDatos.jugadores.get(id).getValorMercado()).sum());
+        int valorTotal = listaIds.stream()
+                .mapToInt(id -> jugadores.get(id).getValorMercado())
+                .sum();
+        System.out.println("[WARN] No se encontró combinación exacta para usuario " +
+                usuario.getNombre() + ", valor total: " + valorTotal);
     }
 
-    // -------------------- CARGAR TODO --------------------
+    // -------------------- CARGAR / INICIALIZAR --------------------
     public static void cargarTodo() {
         usuarios = cargarUsuarios();
         jugadores = cargarJugadores();
-        ligas = cargarLigas();
-        
-
-        // Asignar jugadores a usuarios según tabla intermedia
+        ligas = cargarLigas();       // ahora devuelve Map<Integer,Liga>
         asignarUsuariosJugadores();
+        guardarPlantillas();
     }
 
-    // -------------------- INICIALIZAR DB --------------------
     public static void inicializar() {
         crearTablas();
         cargarTodo();
     }
 
-    // -------------------- MAIN --------------------
-    public static void main(String[] args) {
-        inicializar();
-        System.out.println("✅ Base de datos cargada correctamente. Usuarios: " + usuarios.size());
-    }
-    
+    // -------------------- MERCADO --------------------
     public static boolean tramitarCompra(Usuario comprador, Jugador jugador, Liga liga) {
-       
-        int saldoActual = comprador.getSaldo(liga.getId()); 
-        // -----------------------
-
+        int saldoActual = comprador.getSaldo(liga.getId());
         if (saldoActual < jugador.getValorMercado()) {
             System.out.println("❌ No tienes suficiente dinero.");
             return false;
         }
 
         int coste = jugador.getValorMercado();
-        
-        // Aquí también pasamos el ID de la liga
         comprador.actualizarSaldo(liga.getId(), saldoActual - coste);
 
         liga.getMercadoIds().remove(Integer.valueOf(jugador.getId()));
         comprador.addJugador(jugador.getId());
-
+        guardarPlantillas();
         System.out.println("✅ Compra realizada: " + jugador.getNombre());
         return true;
-    }
-    
-
-    public static void renovarMercado(Liga liga) {
-        if (liga == null) return;
-        liga.generarMercadoRandom();
-        // opcional: persistir inmediatamente
-        guardarLigas();
     }
 
     public static void rellenarMercadoSiVacio() {
         for (Liga l : ligas.values()) {
-            if (l.getMercadoIds() == null || l.getMercadoIds().isEmpty() || l.getMercadoIds().size() != 10) {
-                System.out.println("[GestorDatos] Rellenando/ajustando mercado de liga " + l.getNombre());
-                l.generarMercadoRandom();
+            if (l.getMercadoIds().isEmpty()) {
+                System.out.println("Rellenando mercado de liga " + l.getNombre() + "...");
+                int contador = 0;
+                for (Integer id : jugadores.keySet()) {
+                    l.getMercadoIds().add(id);
+                    contador++;
+                    if (contador >= 10) break;
+                }
             }
         }
     }
 
-
-    
 }
-
