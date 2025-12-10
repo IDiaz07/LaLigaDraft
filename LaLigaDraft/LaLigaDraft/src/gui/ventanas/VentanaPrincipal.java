@@ -1,10 +1,9 @@
 package gui.ventanas;
-import javax.swing.*;
 
+import javax.swing.*;
 import bd.GestorDatos;
 import gui.clases.Liga;
 import gui.clases.Usuario;
-
 import java.awt.*;
 
 public class VentanaPrincipal extends JFrame {
@@ -106,6 +105,11 @@ public class VentanaPrincipal extends JFrame {
         JPanel contenedor = new JPanel(new BorderLayout());
         contenedor.setBackground(new Color(18, 18, 18));
 
+        // ---------------------------------------------------------
+        // CAMBIO: Añadimos el Header en la parte SUPERIOR (NORTH)
+        // ---------------------------------------------------------
+        contenedor.add(crearHeader(), BorderLayout.NORTH);
+        
         contenedor.add(panelContenido, BorderLayout.CENTER);
         contenedor.add(menu, BorderLayout.SOUTH);
 
@@ -122,6 +126,52 @@ public class VentanaPrincipal extends JFrame {
         }
         
         System.out.println("✅ VentanaPrincipal lista - Jugadores del usuario: " + usuario.getJugadores().size());
+    }
+
+    // ===================== NUEVO MÉTODO HEADER ======================
+    private JPanel crearHeader() {
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBackground(new Color(30, 30, 35)); 
+        header.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+
+        // Saludo a la izquierda
+        JLabel lblSaludo = new JLabel("Hola, " + usuario.getNombre());
+        lblSaludo.setFont(new Font("Arial", Font.BOLD, 16));
+        lblSaludo.setForeground(Color.WHITE);
+        header.add(lblSaludo, BorderLayout.WEST);
+
+        // Panel para botones a la derecha
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        panelBotones.setOpaque(false);
+
+        // Botón 1: Cambiar Liga (Vuelve a VentanaSeleccionLiga)
+        JButton btnLiga = new JButton("Cambiar Liga");
+        btnLiga.setBackground(new Color(52, 152, 219));
+        btnLiga.setForeground(Color.WHITE);
+        btnLiga.setFocusPainted(false);
+        btnLiga.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btnLiga.addActionListener(e -> {
+            dispose();
+            SwingUtilities.invokeLater(() -> new VentanaSeleccionLiga(usuario).setVisible(true));
+        });
+
+        // Botón 2: Cerrar Sesión (Vuelve a VentanaInicio)
+        JButton btnSalir = new JButton("Cerrar Sesión");
+        btnSalir.setBackground(new Color(192, 57, 43));
+        btnSalir.setForeground(Color.WHITE);
+        btnSalir.setFocusPainted(false);
+        btnSalir.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btnSalir.addActionListener(e -> {
+            dispose();
+            SwingUtilities.invokeLater(() -> new VentanaInicio().setVisible(true));
+        });
+
+        panelBotones.add(btnLiga);
+        panelBotones.add(btnSalir);
+
+        header.add(panelBotones, BorderLayout.EAST);
+        
+        return header;
     }
 
     // ===================== PLACEHOLDERS ======================
