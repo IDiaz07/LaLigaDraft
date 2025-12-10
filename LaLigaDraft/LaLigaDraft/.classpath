@@ -6,6 +6,10 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="C:/Users/Nitropc/Documents/GitHub/LaLigaDraft/LaLigaDraft/LaLigaDraft/sqlite-jdbc-3.32.3.2.jar"/>
+	<classpathentry kind="lib" path="C:/Users/ander.urzelai/OneDrive - Universidad de Deusto/Documentos/LaLigaDraft/LaLigaDraft/LaLigaDraft/sqlite-jdbc-3.32.3.2.jar">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
