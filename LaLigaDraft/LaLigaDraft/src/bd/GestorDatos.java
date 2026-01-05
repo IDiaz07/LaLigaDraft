@@ -1,4 +1,5 @@
 package bd;
+
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -9,11 +10,18 @@ import gui.clases.Usuario;
 import gui.enums.Estado;
 import gui.enums.Posicion;
 
+/**
+ * Clase principal para la gestión de la base de datos y la persistencia de
+ * datos.
+ * Maneja la conexión con SQLite, y la carga/guardado de Usuarios, Jugadores y
+ * Ligas.
+ */
 public class GestorDatos {
 
     private static final String DB_URL = "jdbc:sqlite:database.db";
 
     // -------------------- CAMPOS ESTÁTICOS --------------------
+    // Mapas en memoria que almacenan toda la información de la aplicación
     public static Map<Integer, Usuario> usuarios = new HashMap<>();
     public static Map<Integer, Jugador> jugadores = new HashMap<>();
     public static Map<Integer, Liga> ligas = new HashMap<>();
@@ -28,82 +36,82 @@ public class GestorDatos {
         try (Connection conn = getConnection(); Statement st = conn.createStatement()) {
 
             st.execute("""
-                CREATE TABLE IF NOT EXISTS usuarios (
-                    id INTEGER PRIMARY KEY,
-                    nombre TEXT,
-                    email TEXT,
-                    telefono TEXT,
-                    contrasena TEXT,
-                    saldo INTEGER,
-                    equipoMostrado BOOLEAN,
-                    ligaActualId INTEGER
-                );
-            """);
+                        CREATE TABLE IF NOT EXISTS usuarios (
+                            id INTEGER PRIMARY KEY,
+                            nombre TEXT,
+                            email TEXT,
+                            telefono TEXT,
+                            contrasena TEXT,
+                            saldo INTEGER,
+                            equipoMostrado BOOLEAN,
+                            ligaActualId INTEGER
+                        );
+                    """);
 
             st.execute("""
-                CREATE TABLE IF NOT EXISTS jugadores (
-                    id INTEGER PRIMARY KEY,
-                    nombre TEXT,
-                    equipo TEXT,
-                    edad INTEGER,
-                    nacionalidad TEXT,
-                    numeroCamiseta INTEGER,
-                    valorMercado INTEGER,
-                    valorInicial INTEGER,
-                    estado TEXT,
-                    posicion TEXT,
-                    goles INTEGER,
-                    asistencias INTEGER,
-                    tarjetasAmarillas INTEGER,
-                    tarjetasRojas INTEGER,
-                    puntosPorJornada TEXT
-                );
-            """);
+                        CREATE TABLE IF NOT EXISTS jugadores (
+                            id INTEGER PRIMARY KEY,
+                            nombre TEXT,
+                            equipo TEXT,
+                            edad INTEGER,
+                            nacionalidad TEXT,
+                            numeroCamiseta INTEGER,
+                            valorMercado INTEGER,
+                            valorInicial INTEGER,
+                            estado TEXT,
+                            posicion TEXT,
+                            goles INTEGER,
+                            asistencias INTEGER,
+                            tarjetasAmarillas INTEGER,
+                            tarjetasRojas INTEGER,
+                            puntosPorJornada TEXT
+                        );
+                    """);
 
             st.execute("""
-                CREATE TABLE IF NOT EXISTS ligas (
-                    id INTEGER PRIMARY KEY,
-                    nombre TEXT,
-                    publica BOOLEAN,
-                    codigoInvitacion TEXT,
-                    ultimaActualizacionMercado INTEGER
-                );
-            """);
+                        CREATE TABLE IF NOT EXISTS ligas (
+                            id INTEGER PRIMARY KEY,
+                            nombre TEXT,
+                            publica BOOLEAN,
+                            codigoInvitacion TEXT,
+                            ultimaActualizacionMercado INTEGER
+                        );
+                    """);
 
-            // OJO: nombres de columnas usuarioId / ligaId (camelCase)
+            //nombres de columnas usuarioId / ligaId (camelCase)
             st.execute("""
-                CREATE TABLE IF NOT EXISTS usuarios_jugadores (
-                    usuario_id INTEGER,
-                    jugador_id INTEGER,
-                    liga_id INTEGER,
-                    PRIMARY KEY(usuario_id, jugador_id, liga_id),
-                    FOREIGN KEY(usuario_id) REFERENCES usuarios(id),
-                    FOREIGN KEY(jugador_id) REFERENCES jugadores(id),
-                    FOREIGN KEY(liga_id) REFERENCES ligas(id)
-                );
-            """);
+                        CREATE TABLE IF NOT EXISTS usuarios_jugadores (
+                            usuario_id INTEGER,
+                            jugador_id INTEGER,
+                            liga_id INTEGER,
+                            PRIMARY KEY(usuario_id, jugador_id, liga_id),
+                            FOREIGN KEY(usuario_id) REFERENCES usuarios(id),
+                            FOREIGN KEY(jugador_id) REFERENCES jugadores(id),
+                            FOREIGN KEY(liga_id) REFERENCES ligas(id)
+                        );
+                    """);
 
             st.execute("""
-                CREATE TABLE IF NOT EXISTS usuarios_ligas (
-                    usuarioId INTEGER,
-                    ligaId INTEGER,
-                    PRIMARY KEY(usuarioId, ligaId),
-                    FOREIGN KEY(usuarioId) REFERENCES usuarios(id),
-                    FOREIGN KEY(ligaId) REFERENCES ligas(id)
-                );
-            """);
+                        CREATE TABLE IF NOT EXISTS usuarios_ligas (
+                            usuarioId INTEGER,
+                            ligaId INTEGER,
+                            PRIMARY KEY(usuarioId, ligaId),
+                            FOREIGN KEY(usuarioId) REFERENCES usuarios(id),
+                            FOREIGN KEY(ligaId) REFERENCES ligas(id)
+                        );
+                    """);
 
             // no creamos ligas_mercado aquí porque podrías haberla creado manualmente,
             // pero si quieres que se cree automáticamente, descomenta lo siguiente:
             st.execute("""
-                CREATE TABLE IF NOT EXISTS ligas_mercado (
-                    liga_id INTEGER,
-                    jugador_id INTEGER,
-                    PRIMARY KEY(liga_id, jugador_id),
-                    FOREIGN KEY(liga_id) REFERENCES ligas(id),
-                    FOREIGN KEY(jugador_id) REFERENCES jugadores(id)
-                );
-            """);
+                        CREATE TABLE IF NOT EXISTS ligas_mercado (
+                            liga_id INTEGER,
+                            jugador_id INTEGER,
+                            PRIMARY KEY(liga_id, jugador_id),
+                            FOREIGN KEY(liga_id) REFERENCES ligas(id),
+                            FOREIGN KEY(jugador_id) REFERENCES jugadores(id)
+                        );
+                    """);
 
             System.out.println("[OK] Tablas creadas o existentes.");
 
@@ -116,8 +124,8 @@ public class GestorDatos {
     public static Map<Integer, Usuario> cargarUsuarios() {
         usuarios.clear();
         try (Connection conn = getConnection();
-             Statement st = conn.createStatement();
-             ResultSet rs = st.executeQuery("SELECT * FROM usuarios")) {
+                Statement st = conn.createStatement();
+                ResultSet rs = st.executeQuery("SELECT * FROM usuarios")) {
 
             while (rs.next()) {
                 Usuario u = new Usuario(
@@ -125,8 +133,7 @@ public class GestorDatos {
                         rs.getString("nombre"),
                         rs.getString("email"),
                         rs.getString("telefono"),
-                        rs.getString("contrasena")
-                );
+                        rs.getString("contrasena"));
                 u.setEquipoMostrado(rs.getBoolean("equipoMostrado"));
                 u.setLigaActualId(rs.getInt("ligaActualId"));
                 usuarios.put(u.getId(), u);
@@ -141,8 +148,8 @@ public class GestorDatos {
     public static Map<Integer, Jugador> cargarJugadores() {
         jugadores.clear();
         try (Connection conn = getConnection();
-             Statement st = conn.createStatement();
-             ResultSet rs = st.executeQuery("SELECT * FROM jugadores")) {
+                Statement st = conn.createStatement();
+                ResultSet rs = st.executeQuery("SELECT * FROM jugadores")) {
 
             while (rs.next()) {
                 Jugador j = new Jugador(
@@ -154,8 +161,7 @@ public class GestorDatos {
                         rs.getInt("numeroCamiseta"),
                         rs.getInt("valorMercado"),
                         Estado.valueOf(rs.getString("estado")),
-                        Posicion.valueOf(rs.getString("posicion"))
-                );
+                        Posicion.valueOf(rs.getString("posicion")));
 
                 j.setValorInicial(rs.getInt("valorInicial"));
                 j.setGoles(rs.getInt("goles"));
@@ -167,8 +173,7 @@ public class GestorDatos {
                 if (puntosStr != null && !puntosStr.isEmpty()) {
                     String[] partes = puntosStr.split(",");
                     for (int i = 0; i < partes.length && i < 32; i++) {
-                        j.getPuntosPorJornada()[i] =
-                                "null".equals(partes[i]) ? null : Integer.parseInt(partes[i]);
+                        j.getPuntosPorJornada()[i] = "null".equals(partes[i]) ? null : Integer.parseInt(partes[i]);
                     }
                 }
 
@@ -191,15 +196,15 @@ public class GestorDatos {
         String sql = "SELECT * FROM ligas";
 
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 Liga liga = new Liga(
-                    rs.getInt("id"),
-                    rs.getString("nombre"),
-                    rs.getBoolean("publica"),
-                    rs.getString("codigoInvitacion") // column name as created
+                        rs.getInt("id"),
+                        rs.getString("nombre"),
+                        rs.getBoolean("publica"),
+                        rs.getString("codigoInvitacion") // column name as created
                 );
 
                 liga.setUltimaActualizacionMercado(rs.getLong("ultimaActualizacionMercado"));
@@ -214,7 +219,7 @@ public class GestorDatos {
         String sqlMercado = "SELECT jugador_id FROM ligas_mercado WHERE liga_id = ?";
 
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sqlMercado)) {
+                PreparedStatement ps = conn.prepareStatement(sqlMercado)) {
 
             for (Liga l : ligas.values()) {
 
@@ -228,27 +233,28 @@ public class GestorDatos {
                     }
                 }
             }
-
+            
+        //excepcion
         } catch (SQLException e) {
-            // Si la tabla no existe o hay problemas, lo mostramos pero no rompemos la carga.
+            // Si la tabla no existe o hay problemas, lo mostramos pero no rompemos la
+            // carga.
             System.err.println("[WARN] no se pudo cargar ligas_mercado: " + e.getMessage());
         }
 
         return ligas;
     }
 
-
     public static void cargarUsuariosLiga(Liga liga) {
         String sql = """
-            SELECT u.id, u.nombre, u.email, u.telefono, u.contrasena,
-                   u.saldo, u.equipoMostrado, u.ligaActualId
-            FROM usuarios u
-            JOIN usuarios_ligas ul ON u.id = ul.usuarioId
-            WHERE ul.ligaId = ?
-        """;
+                    SELECT u.id, u.nombre, u.email, u.telefono, u.contrasena,
+                           u.saldo, u.equipoMostrado, u.ligaActualId
+                    FROM usuarios u
+                    JOIN usuarios_ligas ul ON u.id = ul.usuarioId
+                    WHERE ul.ligaId = ?
+                """;
 
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, liga.getId());
             ResultSet rs = ps.executeQuery();
@@ -264,8 +270,7 @@ public class GestorDatos {
                             rs.getString("nombre"),
                             rs.getString("email"),
                             rs.getString("telefono"),
-                            rs.getString("contrasena")
-                    );
+                            rs.getString("contrasena"));
                     u.setEquipoMostrado(rs.getBoolean("equipoMostrado"));
                     u.setLigaActualId(rs.getInt("ligaActualId"));
                     usuarios.put(id, u);
@@ -283,17 +288,18 @@ public class GestorDatos {
     // -------------------- GUARDAR PLANTILLAS --------------------
     public static void guardarPlantillas() {
         String sqlInsert = """
-            INSERT OR IGNORE INTO usuarios_jugadores (usuario_id, jugador_id, liga_id)
-            VALUES (?, ?, ?)
-        """;
+                    INSERT OR IGNORE INTO usuarios_jugadores (usuario_id, jugador_id, liga_id)
+                    VALUES (?, ?, ?)
+                """;
 
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sqlInsert)) {
+                PreparedStatement ps = conn.prepareStatement(sqlInsert)) {
 
             int total = 0;
             for (Usuario u : usuarios.values()) {
                 List<Integer> jug = u.getJugadores();
-                if (jug == null || jug.isEmpty()) continue;
+                if (jug == null || jug.isEmpty())
+                    continue;
 
                 int ligaId = u.getLigaActualId();
                 if (ligaId == 0 && !ligas.isEmpty()) {
@@ -317,24 +323,25 @@ public class GestorDatos {
 
     // -------------------- GUARDAR ENTIDADES --------------------
     public static Usuario registrarUsuario(String nombre, String email, String telefono,
-                                           String contrasena, int saldoInicial) {
+            String contrasena, int saldoInicial) {
         try (Connection conn = getConnection()) {
 
             int nuevoId = 1;
             String sqlMaxId = "SELECT COALESCE(MAX(id),0)+1 AS nuevoId FROM usuarios";
             try (PreparedStatement ps = conn.prepareStatement(sqlMaxId);
-                 ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) nuevoId = rs.getInt("nuevoId");
+                    ResultSet rs = ps.executeQuery()) {
+                if (rs.next())
+                    nuevoId = rs.getInt("nuevoId");
             }
 
             Usuario nuevo = new Usuario(nuevoId, nombre, email, telefono, contrasena);
             nuevo.actualizarSaldo(-1, saldoInicial);
 
             String sqlInsert = """
-                INSERT INTO usuarios (id, nombre, email, telefono,
-                                      contrasena, saldo, equipoMostrado, ligaActualId)
-                VALUES (?, ?, ?, ?, ?, ?, ?, NULL)
-            """;
+                        INSERT INTO usuarios (id, nombre, email, telefono,
+                                              contrasena, saldo, equipoMostrado, ligaActualId)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, NULL)
+                    """;
 
             try (PreparedStatement ps = conn.prepareStatement(sqlInsert)) {
                 ps.setInt(1, nuevo.getId());
@@ -359,14 +366,14 @@ public class GestorDatos {
 
     public static void guardarUsuarios() {
         String sql = """
-            UPDATE usuarios
-            SET nombre = ?, email = ?, telefono = ?, contrasena = ?,
-                saldo = ?, equipoMostrado = ?, ligaActualId = ?
-            WHERE id = ?
-        """;
+                    UPDATE usuarios
+                    SET nombre = ?, email = ?, telefono = ?, contrasena = ?,
+                        saldo = ?, equipoMostrado = ?, ligaActualId = ?
+                    WHERE id = ?
+                """;
 
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             for (Usuario u : usuarios.values()) {
                 ps.setString(1, u.getNombre());
@@ -388,17 +395,17 @@ public class GestorDatos {
 
     public static void guardarJugadores() {
         String sql = """
-            INSERT OR REPLACE INTO jugadores (
-                id, nombre, equipo, edad, nacionalidad, numeroCamiseta,
-                valorMercado, valorInicial, estado, posicion,
-                goles, asistencias, tarjetasAmarillas, tarjetasRojas,
-                puntosPorJornada
-            )
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-        """;
+                    INSERT OR REPLACE INTO jugadores (
+                        id, nombre, equipo, edad, nacionalidad, numeroCamiseta,
+                        valorMercado, valorInicial, estado, posicion,
+                        goles, asistencias, tarjetasAmarillas, tarjetasRojas,
+                        puntosPorJornada
+                    )
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                """;
 
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             for (Jugador j : jugadores.values()) {
                 ps.setInt(1, j.getId());
@@ -421,7 +428,8 @@ public class GestorDatos {
                 StringBuilder sb = new StringBuilder();
                 Integer[] puntos = j.getPuntosPorJornada();
                 for (int i = 0; i < puntos.length; i++) {
-                    if (i > 0) sb.append(",");
+                    if (i > 0)
+                        sb.append(",");
                     sb.append(puntos[i] == null ? "null" : puntos[i]);
                 }
                 ps.setString(15, sb.toString());
@@ -438,14 +446,14 @@ public class GestorDatos {
 
     public static void guardarLigas() {
         String sql = """
-            INSERT OR REPLACE INTO ligas (
-                id, nombre, publica, codigoInvitacion, ultimaActualizacionMercado
-            )
-            VALUES (?,?,?,?,?)
-        """;
+                    INSERT OR REPLACE INTO ligas (
+                        id, nombre, publica, codigoInvitacion, ultimaActualizacionMercado
+                    )
+                    VALUES (?,?,?,?,?)
+                """;
 
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             // ==================== GUARDAR DATOS DE LIGAS ====================
             for (Liga l : ligas.values()) {
@@ -462,7 +470,7 @@ public class GestorDatos {
             String sqlMercadoInsert = "INSERT INTO ligas_mercado (liga_id, jugador_id) VALUES (?, ?)";
 
             try (PreparedStatement del = conn.prepareStatement(sqlMercadoDelete);
-                 PreparedStatement ins = conn.prepareStatement(sqlMercadoInsert)) {
+                    PreparedStatement ins = conn.prepareStatement(sqlMercadoInsert)) {
 
                 for (Liga l : ligas.values()) {
 
@@ -486,11 +494,11 @@ public class GestorDatos {
         }
     }
 
-
     // -------------------- LIGAS --------------------
     public static Liga buscarLigaPublicaDisponible() {
         for (Liga l : ligas.values()) {
-            if (l.isPublica()) return l;
+            if (l.isPublica())
+                return l;
         }
         return null;
     }
@@ -498,18 +506,20 @@ public class GestorDatos {
     public static Liga registrarLiga(String nombre, boolean publica, String codigo) {
         for (Liga l : ligas.values()) {
             if (l.getNombre().equalsIgnoreCase(nombre)) {
-                if (!publica && Objects.equals(l.getCodigoInvitacion(), codigo)) return null;
-                if (publica) return null;
+                if (!publica && Objects.equals(l.getCodigoInvitacion(), codigo))
+                    return null;
+                if (publica)
+                    return null;
             }
         }
 
         String sql = """
-            INSERT INTO ligas (nombre, publica, codigoInvitacion, ultimaActualizacionMercado)
-            VALUES (?, ?, ?, ?)
-        """;
+                    INSERT INTO ligas (nombre, publica, codigoInvitacion, ultimaActualizacionMercado)
+                    VALUES (?, ?, ?, ?)
+                """;
 
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             long ahora = System.currentTimeMillis();
             ps.setString(1, nombre);
@@ -537,7 +547,7 @@ public class GestorDatos {
         String sql = "INSERT OR IGNORE INTO usuarios_ligas (usuarioId, ligaId) VALUES (?, ?)";
 
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, userId);
             ps.setInt(2, ligaId);
@@ -547,8 +557,10 @@ public class GestorDatos {
             Liga l = ligas.get(ligaId);
 
             if (u != null && l != null) {
-                if (!u.getLigas().contains(ligaId)) u.getLigas().add(ligaId);
-                if (!l.getUsuariosIds().contains(userId)) l.getUsuariosIds().add(userId);
+                if (!u.getLigas().contains(ligaId))
+                    u.getLigas().add(ligaId);
+                if (!l.getUsuariosIds().contains(userId))
+                    l.getUsuariosIds().add(userId);
             }
 
         } catch (Exception e) {
@@ -562,11 +574,12 @@ public class GestorDatos {
         String sql = "SELECT jugador_id FROM usuarios_jugadores WHERE usuario_id = ?";
 
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, idUsuario);
             ResultSet rs = ps.executeQuery();
-            while (rs.next()) lista.add(rs.getInt("jugador_id"));
+            while (rs.next())
+                lista.add(rs.getInt("jugador_id"));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -609,7 +622,8 @@ public class GestorDatos {
             }
 
             for (Jugador j : jugadores.values()) {
-                if (idsOcupados.contains(j.getId())) continue;
+                if (idsOcupados.contains(j.getId()))
+                    continue;
                 switch (j.getPosicion()) {
                     case POR -> porteros.add(j);
                     case DEF -> defensas.add(j);
@@ -626,21 +640,26 @@ public class GestorDatos {
             int count;
 
             count = Math.min(2, porteros.size());
-            for (int i = 0; i < count; i++) listaIds.add(porteros.get(i).getId());
+            for (int i = 0; i < count; i++)
+                listaIds.add(porteros.get(i).getId());
 
             count = Math.min(5, defensas.size());
-            for (int i = 0; i < count; i++) listaIds.add(defensas.get(i).getId());
+            for (int i = 0; i < count; i++)
+                listaIds.add(defensas.get(i).getId());
 
             count = Math.min(5, mediocentros.size());
-            for (int i = 0; i < count; i++) listaIds.add(mediocentros.get(i).getId());
+            for (int i = 0; i < count; i++)
+                listaIds.add(mediocentros.get(i).getId());
 
             count = Math.min(3, delanteros.size());
-            for (int i = 0; i < count; i++) listaIds.add(delanteros.get(i).getId());
+            for (int i = 0; i < count; i++)
+                listaIds.add(delanteros.get(i).getId());
 
             int valorTotal = 0;
             for (int idJ : listaIds) {
                 Jugador j = jugadores.get(idJ);
-                if (j != null) valorTotal += j.getValorMercado();
+                if (j != null)
+                    valorTotal += j.getValorMercado();
             }
 
             if (valorTotal >= 110_000_000 && valorTotal <= 140_000_000) {
@@ -665,7 +684,7 @@ public class GestorDatos {
     public static void cargarTodo() {
         usuarios = cargarUsuarios();
         jugadores = cargarJugadores();
-        ligas = cargarLigas();       // ahora devuelve Map<Integer,Liga>
+        ligas = cargarLigas(); // ahora devuelve Map<Integer,Liga>
         asignarUsuariosJugadores();
         guardarPlantillas();
     }
@@ -701,7 +720,8 @@ public class GestorDatos {
                 for (Integer id : jugadores.keySet()) {
                     l.getMercadoIds().add(id);
                     contador++;
-                    if (contador >= 10) break;
+                    if (contador >= 10)
+                        break;
                 }
             }
         }

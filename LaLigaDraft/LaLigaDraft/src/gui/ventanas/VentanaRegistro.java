@@ -6,6 +6,11 @@ import javax.swing.*;
 
 import bd.GestorDatos;
 
+/**
+ * Ventana para el registro de nuevos usuarios.
+ * Recoge datos personales y realiza validaciones antes de guardar en la base de
+ * datos.
+ */
 public class VentanaRegistro extends JFrame {
 
     private JTextField usuario;

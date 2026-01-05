@@ -1,9 +1,14 @@
 package bd;
+
 import java.io.*;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Clase de utilidad para migrar o asignar jugadores a usuarios
+ * leyendo desde archivos de texto (legacy) hacia la base de datos.
+ */
 public class AsignadorUsuariosJugadores {
 
     private static final String DB_URL = "jdbc:sqlite:database.db";
@@ -17,16 +22,16 @@ public class AsignadorUsuariosJugadores {
         try (Connection conn = getConnection(); Statement st = conn.createStatement()) {
 
             st.execute("""
-                CREATE TABLE IF NOT EXISTS usuarios_jugadores (
-                    usuario_id INTEGER,
-                    jugador_id INTEGER,
-                    liga_id INTEGER,
-                    PRIMARY KEY(usuario_id, jugador_id, liga_id),
-                    FOREIGN KEY(usuario_id) REFERENCES usuarios(id),
-                    FOREIGN KEY(jugador_id) REFERENCES jugadores(id),
-                    FOREIGN KEY(liga_id) REFERENCES ligas(id)
-                );
-            """);
+                        CREATE TABLE IF NOT EXISTS usuarios_jugadores (
+                            usuario_id INTEGER,
+                            jugador_id INTEGER,
+                            liga_id INTEGER,
+                            PRIMARY KEY(usuario_id, jugador_id, liga_id),
+                            FOREIGN KEY(usuario_id) REFERENCES usuarios(id),
+                            FOREIGN KEY(jugador_id) REFERENCES jugadores(id),
+                            FOREIGN KEY(liga_id) REFERENCES ligas(id)
+                        );
+                    """);
 
             System.out.println("[OK] Tabla usuarios_jugadores creada o existente.");
 
@@ -41,9 +46,11 @@ public class AsignadorUsuariosJugadores {
         try (BufferedReader br = new BufferedReader(new FileReader(rutaUsuarios))) {
             String linea;
             while ((linea = br.readLine()) != null) {
-                if (linea.trim().isEmpty()) continue;
+                if (linea.trim().isEmpty())
+                    continue;
                 String[] partes = linea.split(";", -1);
-                if (partes.length < 10) continue; // asegurarse que tenga ligaActualId
+                if (partes.length < 10)
+                    continue; // asegurarse que tenga ligaActualId
                 try {
                     int usuarioId = Integer.parseInt(partes[0].trim());
                     int ligaActualId = Integer.parseInt(partes[9].trim());
@@ -65,12 +72,13 @@ public class AsignadorUsuariosJugadores {
         String sql = "INSERT OR IGNORE INTO usuarios_jugadores (usuario_id, jugador_id, liga_id) VALUES (?, ?, ?);";
 
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             BufferedReader br = new BufferedReader(new FileReader(rutaJugadores))) {
+                PreparedStatement ps = conn.prepareStatement(sql);
+                BufferedReader br = new BufferedReader(new FileReader(rutaJugadores))) {
 
             String linea;
             while ((linea = br.readLine()) != null) {
-                if (linea.trim().isEmpty()) continue;
+                if (linea.trim().isEmpty())
+                    continue;
 
                 String[] campos = linea.split(";", -1);
                 if (campos.length < 11) {

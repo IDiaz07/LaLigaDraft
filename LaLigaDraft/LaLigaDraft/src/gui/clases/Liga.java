@@ -1,19 +1,24 @@
 package gui.clases;
-import java.util.*; 
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 import bd.GestorDatos;
 
+/**
+ * Modelo que representa una liga en el juego.
+ * Gestiona los usuarios participantes y el mercado de fichajes.
+ */
 public class Liga {
     private int id;
     private String nombre;
     private boolean publica;
     private String codigoInvitacion;
 
-    private List<Integer> usuarios;  // IDs de usuarios
-    private List<Integer> mercado;   // IDs de jugadores en mercado
+    private List<Integer> usuarios; // IDs de los usuarios participantes
+    private List<Integer> mercado; // IDs de los jugadores disponibles en el mercado
 
-    private long ultimaActualizacionMercado;
+    private long ultimaActualizacionMercado; // Timestamp de la última renovación del mercado
 
     public Liga(int id, String nombre) {
         this(id, nombre, true, null);
@@ -30,24 +35,40 @@ public class Liga {
         this.ultimaActualizacionMercado = System.currentTimeMillis();
     }
 
-    // ============================================================
-    // GETTERS
-    // ============================================================
-    public int getId() { return id; }
-    public String getNombre() { return nombre; }
-    public boolean isPublica() { return publica; }
-    public String getCodigoInvitacion() { return codigoInvitacion; }
-    public List<Integer> getUsuariosIds() { return usuarios; }
-    public List<Integer> getMercadoIds() { return mercado; }
-    public long getUltimaActualizacionMercado() { return ultimaActualizacionMercado; }
+    // metodos getters
+    public int getId() {
+        return id;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public boolean isPublica() {
+        return publica;
+    }
+
+    public String getCodigoInvitacion() {
+        return codigoInvitacion;
+    }
+
+    public List<Integer> getUsuariosIds() {
+        return usuarios;
+    }
+
+    public List<Integer> getMercadoIds() {
+        return mercado;
+    }
+
+    public long getUltimaActualizacionMercado() {
+        return ultimaActualizacionMercado;
+    }
 
     public void setUltimaActualizacionMercado(long timestamp) {
         this.ultimaActualizacionMercado = timestamp;
     }
 
-    // ============================================================
-    // AÑADIR USUARIO
-    // ============================================================
+    // añadir un usuario
     public void addUsuario(int idUsuario) {
         if (!usuarios.contains(idUsuario)) {
             usuarios.add(idUsuario);
@@ -58,9 +79,7 @@ public class Liga {
         }
     }
 
-    // ============================================================
-    // GENERAR MERCADO RANDOM DE 10 JUGADORES LIBRES
-    // ============================================================
+    // genera mercado aleatorio de 10 jugadores
     public void generarMercadoRandom() {
 
         Set<Integer> mercadoAnterior = new HashSet<>(mercado);
@@ -68,13 +87,14 @@ public class Liga {
         Set<Integer> jugadoresOcupados = new HashSet<>();
         for (int idU : usuarios) {
             Usuario u = GestorDatos.usuarios.get(idU);
-            if (u != null) jugadoresOcupados.addAll(u.getJugadores());
+            if (u != null)
+                jugadoresOcupados.addAll(u.getJugadores());
         }
-        
+
         List<Jugador> disponibles = new ArrayList<>();
         for (Jugador j : GestorDatos.jugadores.values()) {
             if (!jugadoresOcupados.contains(j.getId()) &&
-                !mercadoAnterior.contains(j.getId())) {
+                    !mercadoAnterior.contains(j.getId())) {
                 disponibles.add(j);
             }
         }
@@ -83,7 +103,8 @@ public class Liga {
             for (Jugador j : GestorDatos.jugadores.values()) {
                 if (!jugadoresOcupados.contains(j.getId()) && !disponibles.contains(j)) {
                     disponibles.add(j);
-                    if (disponibles.size() >= 10) break;
+                    if (disponibles.size() >= 10)
+                        break;
                 }
             }
         }
@@ -100,23 +121,19 @@ public class Liga {
         System.out.println("🆕 Mercado renovado sin repeticiones para la liga " + nombre);
     }
 
-
-    // ============================================================
-    // COMPROBAR SI EL MERCADO EXPIRÓ (24H)
-    // ============================================================
+    // comprobar si el mercado expiró (dura 24 horas)
     public boolean mercadoExpirado() {
         long ahora = System.currentTimeMillis();
         return (ahora - ultimaActualizacionMercado) >= 24L * 60 * 60 * 1000; // 24h
     }
 
-    // ============================================================
-    // CLASIFICACIÓN
-    // ============================================================
+    // clasificacion de la liga
     public List<Usuario> getClasificacion() {
         List<Usuario> lista = new ArrayList<>();
         for (int idU : usuarios) {
             Usuario u = GestorDatos.usuarios.get(idU);
-            if (u != null) lista.add(u);
+            if (u != null)
+                lista.add(u);
         }
         lista.sort((u1, u2) -> Integer.compare(puntosUsuario(u2), puntosUsuario(u1)));
         return lista;
@@ -126,14 +143,12 @@ public class Liga {
         int total = 0;
         for (int idJ : usuario.getJugadores()) {
             Jugador j = GestorDatos.jugadores.get(idJ);
-            if (j != null) total += j.getTotalPuntos();
+            if (j != null)
+                total += j.getTotalPuntos();
         }
         return total;
     }
 
-    // ============================================================
-    // EXPORT / IMPORT
-    // ============================================================
     public String toFileString() {
         String usuStr = usuarios.stream().map(String::valueOf).collect(Collectors.joining(","));
         String merStr = mercado.stream().map(String::valueOf).collect(Collectors.joining(","));
@@ -144,7 +159,8 @@ public class Liga {
 
     public static Liga fromFileString(String linea) {
         String[] partes = linea.split(";");
-        if (partes.length < 7) return null;
+        if (partes.length < 7)
+            return null;
 
         int id = Integer.parseInt(partes[0]);
         String nombre = partes[1];

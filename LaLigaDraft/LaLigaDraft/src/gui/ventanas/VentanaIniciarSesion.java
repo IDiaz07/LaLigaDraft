@@ -1,4 +1,5 @@
 package gui.ventanas;
+
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -6,8 +7,12 @@ import javax.swing.*;
 import bd.GestorDatos;
 import gui.clases.Usuario;
 
+/**
+ * Ventana para el inicio de sesión de usuarios existentes.
+ * Verifica credenciales contra la base de datos.
+ */
 public class VentanaIniciarSesion extends JFrame {
-    
+
     private JTextField usuario;
     private JPasswordField contraseña;
 
@@ -22,18 +27,14 @@ public class VentanaIniciarSesion extends JFrame {
         JPanel panelPrincipal = new JPanel(new BorderLayout());
         panelPrincipal.setBackground(new Color(18, 18, 18));
 
-        // =============================
-        //        TÍTULO
-        // =============================
+        
         JLabel labelIniciarSesion = new JLabel("INICIO DE SESIÓN", SwingConstants.CENTER);
         labelIniciarSesion.setFont(new Font("Arial", Font.BOLD, 32));
         labelIniciarSesion.setBorder(BorderFactory.createEmptyBorder(80, 10, 40, 10));
         labelIniciarSesion.setForeground(Color.WHITE);
         panelPrincipal.add(labelIniciarSesion, BorderLayout.NORTH);
 
-        // =============================
-        //        CAMPOS CENTRALES
-        // =============================
+        
         JPanel panelCampos = new JPanel();
         panelCampos.setLayout(new BoxLayout(panelCampos, BoxLayout.Y_AXIS));
         panelCampos.setBackground(new Color(18, 18, 18));
@@ -61,9 +62,7 @@ public class VentanaIniciarSesion extends JFrame {
 
         panelPrincipal.add(panelCampos, BorderLayout.CENTER);
 
-        // =============================
-        //        BOTONES ABAJO
-        // =============================
+        // botones de abajo
         JPanel panelBotones = new JPanel(new GridLayout(1, 2, 40, 40));
         panelBotones.setBorder(BorderFactory.createEmptyBorder(0, 100, 150, 100));
         panelBotones.setBackground(new Color(18, 18, 18));
@@ -119,7 +118,7 @@ public class VentanaIniciarSesion extends JFrame {
         add(panelBotones, BorderLayout.SOUTH);
     }
 
-    // -------------------- ESTILO CAMPOS --------------------
+   
     private void estiloCampo(JTextField field) {
         field.setBackground(new Color(28, 28, 28));
         field.setForeground(Color.WHITE);
@@ -135,7 +134,7 @@ public class VentanaIniciarSesion extends JFrame {
         return b;
     }
 
-    // -------------------- PLACEHOLDERS --------------------
+    
     public static void addPlaceholder(JTextField textField, String placeholder) {
         textField.setText(placeholder);
         textField.setForeground(Color.GRAY);
@@ -158,7 +157,7 @@ public class VentanaIniciarSesion extends JFrame {
     }
 
     public static void addPlaceholder(JPasswordField passwordField, String placeholder) {
-        passwordField.setEchoChar((char)0);
+        passwordField.setEchoChar((char) 0);
         passwordField.setText(placeholder);
         passwordField.setForeground(Color.GRAY);
 
@@ -173,7 +172,7 @@ public class VentanaIniciarSesion extends JFrame {
 
             public void focusLost(FocusEvent e) {
                 if (new String(passwordField.getPassword()).isEmpty()) {
-                    passwordField.setEchoChar((char)0);
+                    passwordField.setEchoChar((char) 0);
                     passwordField.setText(placeholder);
                     passwordField.setForeground(Color.GRAY);
                 }

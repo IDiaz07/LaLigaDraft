@@ -6,6 +6,11 @@ import gui.clases.Liga;
 import gui.clases.Usuario;
 import java.awt.*;
 
+/**
+ * Ventana principal de la aplicación.
+ * Contiene el menú de navegación y paneles para las distintas secciones
+ * (Equipo, Mercado, Clasificación).
+ */
 public class VentanaPrincipal extends JFrame {
 
     private final Usuario usuario;
@@ -15,9 +20,9 @@ public class VentanaPrincipal extends JFrame {
     public VentanaPrincipal(Usuario usuario) {
         this.usuario = usuario;
 
-        // ⭐ CARGA COMPLETA ANTES DE TODO
+        //CARGA COMPLETA 
         GestorDatos.inicializar();
-        GestorDatos.cargarJugadores();  // ← JUGADORES DISPONIBLES
+        GestorDatos.cargarJugadores(); // JUGADORES DISPONIBLES
         System.out.println("✅ Jugadores cargados: " + GestorDatos.jugadores.size());
 
         Liga ligaActual = GestorDatos.ligas.get(usuario.getLigaActualId());
@@ -28,13 +33,13 @@ public class VentanaPrincipal extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setResizable(false);
 
-        // ================= PANEL CONTENIDO ================
+      
         cardLayout = new CardLayout();
         panelContenido = new JPanel(cardLayout);
         panelContenido.setBackground(new Color(18, 18, 18));
 
         // Panel placeholders
-        String[] secciones = {"Dashboard", "Equipo", "Clasificación", "Mercado", "Actividad"};
+        String[] secciones = { "Dashboard", "Equipo", "Clasificación", "Mercado", "Actividad" };
 
         for (String s : secciones) {
             if (!s.equals("Equipo") && !s.equals("Clasificación") && !s.equals("Mercado")) {
@@ -72,10 +77,10 @@ public class VentanaPrincipal extends JFrame {
             panelContenido.add(crearPanelError("Mercado"), "Mercado");
         }
 
-        // ===================== MENÚ INFERIOR ======================
+        // menu inferior
         JPanel menu = new JPanel(new GridLayout(1, secciones.length));
         menu.setBackground(new Color(28, 28, 28));
-        menu.setPreferredSize(new Dimension(600, 85));  // 🔥 Menú más grande
+        menu.setPreferredSize(new Dimension(600, 85)); // 🔥 Menú más grande
 
         for (String s : secciones) {
             JButton boton = new JButton(s);
@@ -101,15 +106,13 @@ public class VentanaPrincipal extends JFrame {
             menu.add(boton);
         }
 
-        // =============== CONTENEDOR PRINCIPAL AJUSTADO ===============
+        
         JPanel contenedor = new JPanel(new BorderLayout());
         contenedor.setBackground(new Color(18, 18, 18));
 
-        // ---------------------------------------------------------
-        // CAMBIO: Añadimos el Header en la parte SUPERIOR (NORTH)
-        // ---------------------------------------------------------
-        contenedor.add(crearHeader(), BorderLayout.NORTH);
         
+        contenedor.add(crearHeader(), BorderLayout.NORTH);
+
         contenedor.add(panelContenido, BorderLayout.CENTER);
         contenedor.add(menu, BorderLayout.SOUTH);
 
@@ -124,14 +127,14 @@ public class VentanaPrincipal extends JFrame {
                 new VentanaEquipoInicial(usuario).setVisible(true);
             });
         }
-        
+
         System.out.println("✅ VentanaPrincipal lista - Jugadores del usuario: " + usuario.getJugadores().size());
     }
 
-    // ===================== NUEVO MÉTODO HEADER ======================
+    
     private JPanel crearHeader() {
         JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(new Color(30, 30, 35)); 
+        header.setBackground(new Color(30, 30, 35));
         header.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
 
         // Saludo a la izquierda
@@ -170,11 +173,11 @@ public class VentanaPrincipal extends JFrame {
         panelBotones.add(btnSalir);
 
         header.add(panelBotones, BorderLayout.EAST);
-        
+
         return header;
     }
 
-    // ===================== PLACEHOLDERS ======================
+    
     private JPanel crearPanelPlaceholder(String txt) {
         JPanel p = new JPanel(new BorderLayout());
         p.setBackground(new Color(18, 18, 18));

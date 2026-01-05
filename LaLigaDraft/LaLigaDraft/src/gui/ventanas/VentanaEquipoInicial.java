@@ -1,4 +1,5 @@
 package gui.ventanas;
+
 import javax.swing.*;
 
 import bd.GestorDatos;
@@ -8,6 +9,10 @@ import gui.clases.Usuario;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 
+/**
+ * Ventana informativa que muestra el equipo inicial asignado aleatoriamente al
+ * usuario.
+ */
 public class VentanaEquipoInicial extends JFrame {
 
     public VentanaEquipoInicial(Usuario usuario) {

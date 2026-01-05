@@ -1,4 +1,5 @@
 package gui.ventanas;
+
 import javax.swing.*;
 
 import bd.GestorDatos;
@@ -11,6 +12,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * Panel que muestra el mercado de fichajes de la liga.
+ * Include un buscador y un temporizador de actualización.
+ */
 public class PanelMercado extends JPanel {
 
     private final Usuario usuario;
@@ -43,7 +48,6 @@ public class PanelMercado extends JPanel {
             }
         }
 
-
         setLayout(new BorderLayout());
         setBackground(new Color(18, 18, 18));
 
@@ -52,8 +56,7 @@ public class PanelMercado extends JPanel {
         add(construirBarraSaldo(), BorderLayout.SOUTH);
     }
 
-
-    /* --------------------------- HEADER: SOLO BUSCADOR + TEMPORIZADOR --------------------------- */
+    
     private JPanel construirHeader() {
 
         JPanel header = new JPanel(new BorderLayout());
@@ -87,8 +90,7 @@ public class PanelMercado extends JPanel {
         return header;
     }
 
-
-    /* --------------------------- LISTA DE JUGADORES --------------------------- */
+    // lista de jugadores
     private JScrollPane construirMarketplace() {
 
         contenedorLista = new JPanel();
@@ -104,19 +106,20 @@ public class PanelMercado extends JPanel {
         return scroll;
     }
 
-
     /* --------------------------- RECONSTRUIR LISTA --------------------------- */
     private void refrescarLista() {
 
         contenedorLista.removeAll();
 
-        if (ligaActual == null) return;
+        if (ligaActual == null)
+            return;
 
         List<Jugador> lista = new ArrayList<>();
 
         for (Integer id : ligaActual.getMercadoIds()) {
             Jugador j = GestorDatos.jugadores.get(id);
-            if (j != null) lista.add(j);
+            if (j != null)
+                lista.add(j);
         }
 
         // Filtro por buscador
@@ -139,8 +142,7 @@ public class PanelMercado extends JPanel {
         contenedorLista.repaint();
     }
 
-
-    /* --------------------------- BARRA INFERIOR DE SALDO (ESTILO DAZN) --------------------------- */
+    //saldo del usuario
     private JPanel construirBarraSaldo() {
 
         JPanel barra = new JPanel(new BorderLayout());
@@ -157,9 +159,9 @@ public class PanelMercado extends JPanel {
         return barra;
     }
 
-    /* --------------------------- TEMPORIZADOR --------------------------- */
     private void iniciarTemporizador() {
-        if (ligaActual == null) return;
+        if (ligaActual == null)
+            return;
 
         timerRenovacion = new Timer(1000, e -> {
 
@@ -179,21 +181,20 @@ public class PanelMercado extends JPanel {
             long horas = (resta / (1000 * 60 * 60));
 
             lblTemporizador.setText(
-                    String.format("%02dh %02dm %02ds", horas, minutos, segundos)
-            );
+                    String.format("%02dh %02dm %02ds", horas, minutos, segundos));
         });
 
         timerRenovacion.start();
     }
 
-    /* --------------------------- SALDO --------------------------- */
+    
     private String formatearSaldo() {
-        if (ligaActual == null) return "0 €";
+        if (ligaActual == null)
+            return "0 €";
         return String.format("%,d €", usuario.getSaldo(ligaActual.getId()));
     }
 
-
- // ===== MÉTODOS COMPATIBLES CON VentanaPrincipal =====
+    
 
     public void setSaldo(int saldo) {
         if (lblSaldoInferior != null) {
@@ -211,6 +212,5 @@ public class PanelMercado extends JPanel {
     public void actualizarSaldoVisual() {
         setSaldo(usuario.getSaldo(ligaActual.getId()));
     }
-
 
 }

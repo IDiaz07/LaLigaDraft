@@ -1,4 +1,5 @@
 package gui.ventanas;
+
 import java.awt.*;
 import javax.swing.*;
 
@@ -8,6 +9,10 @@ import gui.clases.Usuario;
 
 import java.util.*;
 
+/**
+ * Ventana que permite al usuario unirse o crear una liga (pública o privada)
+ * antes de acceder al panel principal.
+ */
 public class VentanaSeleccionLiga extends JFrame {
 
     private final Usuario usuario;
@@ -15,25 +20,17 @@ public class VentanaSeleccionLiga extends JFrame {
     public VentanaSeleccionLiga(Usuario usuario) {
         this.usuario = usuario;
 
-        // -----------------------------------
-        // CONFIGURACIÓN DE LA VENTANA
-        // -----------------------------------
+        // configurar ventana
         setTitle("Seleccionar Liga");
         setSize(600, 900);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setResizable(false);
 
-        // -----------------------------------
-        // PANEL PRINCIPAL
-        // -----------------------------------
         JPanel main = new JPanel(new BorderLayout());
         main.setBackground(new Color(18, 18, 18));
         main.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
 
-        // -----------------------------------
-        // TÍTULO
-        // -----------------------------------
         JLabel titulo = new JLabel("¡Bienvenido, " + usuario.getNombre() + "!");
         titulo.setFont(new Font("Arial", Font.BOLD, 34));
         titulo.setHorizontalAlignment(SwingConstants.CENTER);
@@ -41,9 +38,6 @@ public class VentanaSeleccionLiga extends JFrame {
         titulo.setBorder(BorderFactory.createEmptyBorder(30, 10, 50, 10));
         main.add(titulo, BorderLayout.NORTH);
 
-        // -----------------------------------
-        // BOTONES DE OPCIONES
-        // -----------------------------------
         JPanel opciones = new JPanel(new GridLayout(3, 1, 30, 30));
         opciones.setBackground(new Color(18, 18, 18));
 
@@ -57,9 +51,7 @@ public class VentanaSeleccionLiga extends JFrame {
 
         main.add(opciones, BorderLayout.CENTER);
 
-        // -----------------------------------
-        // BOTÓN SALIR
-        // -----------------------------------
+        // boton de salir
         JButton btnSalir = new JButton("Salir");
         btnSalir.setFont(new Font("Arial", Font.BOLD, 22));
         btnSalir.setBackground(new Color(40, 40, 40));
@@ -75,19 +67,13 @@ public class VentanaSeleccionLiga extends JFrame {
 
         setContentPane(main);
 
-        // -----------------------------------
-        // LISTENERS (FUNCIONAMIENTO ORIGINAL)
-        // -----------------------------------
+        // listeners
         btnPublica.addActionListener(e -> unirseALigaPublica());
         btnPrivada.addActionListener(e -> crearLigaPrivada());
         btnUnirseCodigo.addActionListener(e -> unirseConCodigo());
         btnSalir.addActionListener(e -> dispose());
     }
 
-
-    // -------------------------------------------------------------
-    // BOTÓN GRANDE (ESTILO UNIFICADO LALIGADRAFT)
-    // -------------------------------------------------------------
     private JButton crearBotonGrande(String texto) {
         JButton b = new JButton(texto);
         b.setFont(new Font("Arial", Font.BOLD, 24));
@@ -100,9 +86,6 @@ public class VentanaSeleccionLiga extends JFrame {
     }
 
 
-    // -------------------------------------------------------------
-    // LÓGICA ORIGINAL (NO MODIFICADA)
-    // -------------------------------------------------------------
     private void unirseALigaPublica() {
         Liga liga = GestorDatos.buscarLigaPublicaDisponible();
         if (liga == null) {
@@ -135,7 +118,8 @@ public class VentanaSeleccionLiga extends JFrame {
         int ok = JOptionPane.showConfirmDialog(this, form, "Crear liga privada",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
-        if (ok != JOptionPane.OK_OPTION) return;
+        if (ok != JOptionPane.OK_OPTION)
+            return;
 
         String nom = nombre.getText().trim();
         String cod = codigo.getText().trim();
@@ -193,10 +177,12 @@ public class VentanaSeleccionLiga extends JFrame {
                     "Liga no encontrada",
                     JOptionPane.YES_NO_OPTION);
 
-            if (crear != JOptionPane.YES_OPTION) return;
+            if (crear != JOptionPane.YES_OPTION)
+                return;
 
             String nombre = JOptionPane.showInputDialog(this, "Nombre de la nueva liga:");
-            if (nombre == null || nombre.trim().isEmpty()) return;
+            if (nombre == null || nombre.trim().isEmpty())
+                return;
 
             Liga nueva = GestorDatos.registrarLiga(nombre.trim(), false, codigo);
             GestorDatos.agregarUsuarioALiga(usuario.getId(), nueva.getId());

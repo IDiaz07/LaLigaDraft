@@ -1,4 +1,5 @@
 package gui.ventanas;
+
 import javax.swing.*;
 
 import bd.GestorDatos;
@@ -12,6 +13,10 @@ import gui.enums.Posicion;
 import java.awt.*;
 import java.text.DecimalFormat;
 
+/**
+ * Componente visual que representa un jugador en el mercado de fichajes.
+ * Muestra información básica y permite realizar la compra.
+ */
 public class ItemMercado extends JPanel {
 
     private final Jugador jugador;
@@ -30,16 +35,15 @@ public class ItemMercado extends JPanel {
 
         setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createEmptyBorder(6, 6, 6, 6),
-                BorderFactory.createLineBorder(new Color(70, 70, 85), 1)
-        ));
+                BorderFactory.createLineBorder(new Color(70, 70, 85), 1)));
 
-        // ⬆️ Aumentamos el tamaño para que todo se vea perfecto
+        // Aumentamos el tamaño para que todo se vea perfecto
         setMaximumSize(new Dimension(Integer.MAX_VALUE, 150));
 
         add(construirContenido(), BorderLayout.CENTER);
     }
 
-    /** PANEL COMPLETO */
+    //panel completo
     private JPanel construirContenido() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(new Color(45, 45, 60));
@@ -51,7 +55,7 @@ public class ItemMercado extends JPanel {
         return panel;
     }
 
-    /** INFORMACIÓN IZQUIERDA */
+    //informacion izquierda
     private JPanel construirInfoJugador() {
 
         JPanel panel = new JPanel();
@@ -77,7 +81,7 @@ public class ItemMercado extends JPanel {
         lblEstado.setForeground(colorEstado(jugador.getEstado()));
         lblEstado.setFont(new Font("Arial", Font.BOLD, 14));
 
-        // ⭐ Valor más grande y visible
+        //Valor más grande y visible
         JLabel lblValor = new JLabel("Valor: " + df.format(jugador.getValorMercado()) + " €");
         lblValor.setForeground(Color.WHITE);
         lblValor.setFont(new Font("Arial", Font.BOLD, 17));
@@ -92,7 +96,7 @@ public class ItemMercado extends JPanel {
         return panel;
     }
 
-    /** BOTÓN DE COMPRA */
+    // boton de comprar jugador
     private JPanel construirBoton() {
         JPanel panel = new JPanel();
         panel.setBackground(new Color(45, 45, 60));
@@ -112,7 +116,6 @@ public class ItemMercado extends JPanel {
         return panel;
     }
 
-    /** LÓGICA DE COMPRA */
     private void intentarFichaje() {
         int saldo = usuario.getSaldo(liga.getId());
         int precio = jugador.getValorMercado();
@@ -130,7 +133,7 @@ public class ItemMercado extends JPanel {
         }
     }
 
-    /** UTILIDADES */
+
     private String formatoPosicion(Posicion p) {
         return switch (p) {
             case POR -> "POR";
@@ -140,12 +143,13 @@ public class ItemMercado extends JPanel {
         };
     }
 
+    //cada posicion tiene un color para diferenciarlas
     private Color colorPosicion(Posicion p) {
         return switch (p) {
-            case POR -> new Color(52, 152, 219);   // azul
-            case DEF -> new Color(155, 89, 182);   // morado
-            case MED -> new Color(46, 204, 113);   // verde
-            case DEL -> new Color(231, 76, 60);    // rojo
+            case POR -> new Color(52, 152, 219); // azul
+            case DEF -> new Color(155, 89, 182); // morado
+            case MED -> new Color(46, 204, 113); // verde
+            case DEL -> new Color(231, 76, 60); // rojo
         };
     }
 

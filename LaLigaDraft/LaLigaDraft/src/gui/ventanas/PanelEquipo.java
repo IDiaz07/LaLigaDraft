@@ -1,4 +1,5 @@
 package gui.ventanas;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
@@ -16,6 +17,11 @@ import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Panel que gestiona la plantilla del usuario.
+ * Permite ver la alineación en un campo gráfico y la lista completa de
+ * jugadores.
+ */
 public class PanelEquipo extends JPanel {
 
     private final Usuario usuario;
@@ -29,9 +35,7 @@ public class PanelEquipo extends JPanel {
     private List<Jugador> titularesActuales = new ArrayList<>();
     private List<Jugador> suplentesActuales = new ArrayList<>();
 
-    // -------------------------------------------------------------
-    // Constructor
-    // -------------------------------------------------------------
+    
     public PanelEquipo(Usuario usuario) {
         this.usuario = usuario;
 
@@ -60,9 +64,7 @@ public class PanelEquipo extends JPanel {
         cardLayout.show(cards, "Alineacion"); // Mostrar la alineación por defecto
     }
 
-    // -------------------------------------------------------------
-    // Panel de Navegación con botones
-    // -------------------------------------------------------------
+    // panel de navegacion con botones
     private JPanel crearPanelNavegacion() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         panel.setBackground(new Color(18, 18, 18));
@@ -81,14 +83,11 @@ public class PanelEquipo extends JPanel {
         return panel;
     }
 
-    // -------------------------------------------------------------
-    // Método que contiene la vista de la Alineación (el campo)
-    // -------------------------------------------------------------
+    // el campo
     private JPanel crearPanelAlineacion() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(Color.DARK_GRAY);
 
-        // ======================= CAMPO =======================
         campo = new JPanel(null) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -110,19 +109,19 @@ public class PanelEquipo extends JPanel {
         campo.setBorder(BorderFactory.createLineBorder(Color.white, 2));
         panel.add(campo, BorderLayout.CENTER);
 
-        // ======================= TITULARES =======================
+        // jugadores titulares
         for (int i = 0; i < 11; i++) {
             JLabel lbl = crearLabelJugador(i);
             labelsTitulares.add(lbl);
             campo.add(lbl);
         }
 
-        // ======================= PANEL INFERIOR =======================
+        // panel inferior
         JPanel panelInferior = new JPanel(new FlowLayout(FlowLayout.LEFT));
         panelInferior.setBackground(new Color(18, 18, 18));
         panelInferior.setPreferredSize(new Dimension(600, 50));
 
-        comboFormacion = new JComboBox<>(new String[]{"4-4-2", "4-3-3", "3-5-2"});
+        comboFormacion = new JComboBox<>(new String[] { "4-4-2", "4-3-3", "3-5-2" });
         comboFormacion.addActionListener(e -> actualizarFormacion());
         panelInferior.add(comboFormacion);
         panel.add(panelInferior, BorderLayout.SOUTH);
@@ -130,9 +129,7 @@ public class PanelEquipo extends JPanel {
         return panel;
     }
 
-    // -------------------------------------------------------------
-    // Panel que muestra la Plantilla en formato visual de tabla/lista
-    // -------------------------------------------------------------
+    // muestra lo mismo pero de forma mas visual, en modo tabla/plantilla
     private JPanel crearPanelPlantilla() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(new Color(18, 18, 18));
@@ -150,10 +147,10 @@ public class PanelEquipo extends JPanel {
         todaLaPlantilla.sort(Comparator.comparing(Jugador::getPosicion)
                 .thenComparing(Jugador::getValorMercado, Comparator.reverseOrder()));
 
-        // 2. Preparar la tabla de jugadores 
-        String[] nombresColumnas = {"Posición", "Nombre", "Valor (€)", "Puntos Totales"};
+        // 2. Preparar la tabla de jugadores
+        String[] nombresColumnas = { "Posición", "Nombre", "Valor (€)", "Puntos Totales" };
         Object[][] datos = todaLaPlantilla.stream()
-                .map(j -> new Object[]{
+                .map(j -> new Object[] {
                         j.getPosicion().toString(),
                         j.getNombre() + " (" + j.getEquipo() + ")",
                         String.format("%,d", j.getValorMercado()),
@@ -179,7 +176,7 @@ public class PanelEquipo extends JPanel {
         tablaPlantilla.getTableHeader().setForeground(Color.WHITE);
         tablaPlantilla.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
         tablaPlantilla.getTableHeader().setReorderingAllowed(false);
-        
+
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
         tablaPlantilla.getColumnModel().getColumn(0).setPreferredWidth(80);
@@ -201,12 +198,11 @@ public class PanelEquipo extends JPanel {
         panelValorTotal.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
 
         JLabel lblValorTotal = new JLabel(
-            "Valor del Equipo: " + String.format("%,d", valorTotal) + " €"
-        );
+                "Valor del Equipo: " + String.format("%,d", valorTotal) + " €");
         lblValorTotal.setFont(new Font("Segoe UI", Font.BOLD, 16));
         lblValorTotal.setForeground(Color.WHITE);
         panelValorTotal.add(lblValorTotal);
-        
+
         panel.add(panelValorTotal, BorderLayout.SOUTH);
 
         return panel;
@@ -252,7 +248,8 @@ public class PanelEquipo extends JPanel {
         List<Jugador> delanteros = filtrarPorPosicion(todos, Posicion.DEL);
 
         // Titulares (4-4-2 por defecto)
-        if (!porteros.isEmpty()) titularesActuales.add(porteros.get(0));
+        if (!porteros.isEmpty())
+            titularesActuales.add(porteros.get(0));
         titularesActuales.addAll(defensas.stream().limit(4).collect(Collectors.toList()));
         titularesActuales.addAll(medios.stream().limit(4).collect(Collectors.toList()));
         titularesActuales.addAll(delanteros.stream().limit(2).collect(Collectors.toList()));
@@ -267,14 +264,15 @@ public class PanelEquipo extends JPanel {
         while (suplentesActuales.size() < 4)
             suplentesActuales.add(jugadorPlaceholder(Posicion.MED));
     }
-    
+
     private void actualizarFormacion() {
         System.out.println("🔄 Actualizando formación...");
-        
-        String formacion = (String) comboFormacion.getSelectedItem();
-        if (formacion == null) formacion = "4-4-2";
 
-        // DEBUG: Ver jugadores del usuario
+        String formacion = (String) comboFormacion.getSelectedItem();
+        if (formacion == null)
+            formacion = "4-4-2";
+
+        
         List<Jugador> todos = usuario.getJugadores().stream()
                 .map(id -> GestorDatos.jugadores.get(id))
                 .filter(Objects::nonNull)
@@ -285,7 +283,7 @@ public class PanelEquipo extends JPanel {
         int def = Integer.parseInt(partes[0]);
         int med = Integer.parseInt(partes[1]);
         int del = Integer.parseInt(partes[2]);
-        
+
         System.out.println("Formación: " + def + "-" + med + "-" + del);
 
         // CLASIFICAR JUGADORES
@@ -293,8 +291,9 @@ public class PanelEquipo extends JPanel {
         List<Jugador> defen = filtrarPorPosicion(todos, Posicion.DEF);
         List<Jugador> medi = filtrarPorPosicion(todos, Posicion.MED);
         List<Jugador> delan = filtrarPorPosicion(todos, Posicion.DEL);
-        
-        System.out.println("POR:" + por.size() + " DEF:" + defen.size() + " MED:" + medi.size() + " DEL:" + delan.size());
+
+        System.out
+                .println("POR:" + por.size() + " DEF:" + defen.size() + " MED:" + medi.size() + " DEL:" + delan.size());
 
         // LIMPIAR
         titularesActuales.clear();
@@ -302,21 +301,21 @@ public class PanelEquipo extends JPanel {
         // RELLENAR EXACTAMENTE 11 POSICIONES
         // Posición 0: PORTERO
         titularesActuales.add(por.isEmpty() ? jugadorPlaceholder(Posicion.POR) : por.get(0));
-        
-        // Posiciones 1-def: DEFENSAS  
+
+        // Posiciones 1-def: DEFENSAS
         for (int i = 0; i < def; i++) {
             titularesActuales.add(i < defen.size() ? defen.get(i) : jugadorPlaceholder(Posicion.DEF));
         }
-        
+
         // Posiciones def+1 a def+med: MEDIOS
         for (int i = 0; i < med; i++) {
             titularesActuales.add(i < medi.size() ? medi.get(i) : jugadorPlaceholder(Posicion.MED));
         }
-        
+
         // Resto hasta 11: DELANTEROS
         for (int i = titularesActuales.size(); i < 11; i++) {
-            titularesActuales.add(i - titularesActuales.size() < delan.size() ? 
-                delan.get(i - titularesActuales.size()) : jugadorPlaceholder(Posicion.DEL));
+            titularesActuales.add(i - titularesActuales.size() < delan.size() ? delan.get(i - titularesActuales.size())
+                    : jugadorPlaceholder(Posicion.DEL));
         }
 
         System.out.println("Titulares creados: " + titularesActuales.size());
@@ -333,7 +332,7 @@ public class PanelEquipo extends JPanel {
 
     private void mostrarJugadoresEnCampo(String formacion) {
         System.out.println("📍 Mostrando en campo...");
-        
+
         // OCULTAR TODOS LOS LABELS
         for (JLabel lbl : labelsTitulares) {
             lbl.setVisible(false);
@@ -352,20 +351,20 @@ public class PanelEquipo extends JPanel {
 
         // PORTERO (index 0)
         if (index < titularesActuales.size() && index < labelsTitulares.size()) {
-            colocarJugador(titularesActuales.get(index), labelsTitulares.get(index), w/2-40, h-50);
+            colocarJugador(titularesActuales.get(index), labelsTitulares.get(index), w / 2 - 40, h - 50);
             index++;
         }
 
         // DEFENSAS (usar titularesActuales)
-        colocarLinea(def, h * 3/4, index);
+        colocarLinea(def, h * 3 / 4, index);
         index += def;
 
         // MEDIOS
-        colocarLinea(med, h/2, index);
+        colocarLinea(med, h / 2, index);
         index += med;
 
         // DELANTEROS
-        colocarLinea(del, h/5, index);
+        colocarLinea(del, h / 5, index);
 
         campo.repaint();
         System.out.println("✅ Campo repintado");
@@ -384,7 +383,7 @@ public class PanelEquipo extends JPanel {
             Jugador j = titularesActuales.get(idx);
             JLabel lbl = labelsTitulares.get(idx);
             int x = espacio * (i + 1) - 40;
-            
+
             lbl.setBounds(x, y, 80, 25);
             lbl.setText(j.getNombre());
             lbl.setToolTipText(j.getPosicion() + " | " + j.getEquipo());
@@ -392,8 +391,6 @@ public class PanelEquipo extends JPanel {
         }
     }
 
-
-    
     private List<Jugador> filtrarPorPosicion(List<Jugador> lista, Posicion pos) {
         return lista.stream().filter(j -> j.getPosicion() == pos).collect(Collectors.toList());
     }
@@ -410,22 +407,24 @@ public class PanelEquipo extends JPanel {
         lbl.setVisible(true);
     }
 
-    /** Refresca el campo con los jugadores actuales (sin recalcular) */
+    // Refresca el campo con los jugadores actuales (sin recalcular) 
     private void refrescarCampo() {
         String formacion = (String) comboFormacion.getSelectedItem();
-        if (formacion == null) formacion = "4-4-2";
+        if (formacion == null)
+            formacion = "4-4-2";
         mostrarJugadoresEnCampo(formacion);
         campo.repaint();
     }
 
-    /** Ventana para intercambiar con suplentes */
+    // Ventana para intercambiar con suplentes 
     private void mostrarVentanaCambio(Jugador titular, int indexTitular) {
         List<Jugador> suplentesMismaPos = suplentesActuales.stream()
                 .filter(j -> j.getPosicion() == titular.getPosicion())
                 .collect(Collectors.toList());
 
         if (titular.getId() == -1 || suplentesMismaPos.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No hay suplentes disponibles para esa posición o la casilla está vacía.");
+            JOptionPane.showMessageDialog(this,
+                    "No hay suplentes disponibles para esa posición o la casilla está vacía.");
             return;
         }
 

@@ -1,13 +1,18 @@
 package gui.ventanas;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import javax.swing.*;
 
+/**
+ * Ventana inicial de la aplicación.
+ * Ofrece las opciones de iniciar sesión o registrarse.
+ */
 public class VentanaInicio extends JFrame {
 
     public VentanaInicio() {
         setTitle("LaLigaDraft - Inicio");
-        setSize(600, 900);  
+        setSize(600, 900);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setResizable(false);
