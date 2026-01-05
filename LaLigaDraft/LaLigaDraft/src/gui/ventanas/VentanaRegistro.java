@@ -1,4 +1,5 @@
 package gui.ventanas;
+
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -71,10 +72,13 @@ public class VentanaRegistro extends JFrame {
 
         tf.addFocusListener(new FocusAdapter() {
             public void focusGained(FocusEvent e) {
-                if (tf.getText().equals(placeholder)) tf.setText("");
+                if (tf.getText().equals(placeholder))
+                    tf.setText("");
             }
+
             public void focusLost(FocusEvent e) {
-                if (tf.getText().isEmpty()) tf.setText(placeholder);
+                if (tf.getText().isEmpty())
+                    tf.setText(placeholder);
             }
         });
 
@@ -87,7 +91,7 @@ public class VentanaRegistro extends JFrame {
         pf.setForeground(Color.WHITE);
         pf.setFont(new Font("Arial", Font.PLAIN, 20));
         pf.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
-        pf.setEchoChar((char)0);
+        pf.setEchoChar((char) 0);
 
         pf.addFocusListener(new FocusAdapter() {
             public void focusGained(FocusEvent e) {
@@ -96,9 +100,10 @@ public class VentanaRegistro extends JFrame {
                     pf.setEchoChar('•');
                 }
             }
+
             public void focusLost(FocusEvent e) {
                 if (new String(pf.getPassword()).isEmpty()) {
-                    pf.setEchoChar((char)0);
+                    pf.setEchoChar((char) 0);
                     pf.setText(placeholder);
                 }
             }
@@ -127,9 +132,15 @@ public class VentanaRegistro extends JFrame {
         String pass = new String(contraseña.getPassword());
 
         if (nombre.isEmpty() || mail.isEmpty() || tel.isEmpty() || pass.isEmpty() ||
-            nombre.equals("Nombre de Usuario"))
-        {
+                nombre.equals("Nombre de Usuario")) {
             JOptionPane.showMessageDialog(this, "Rellena todos los campos.");
+            return;
+        }
+
+        // Validación de email
+        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
+        if (!mail.matches(emailRegex)) {
+            JOptionPane.showMessageDialog(this, "Por favor, introduce un email válido.");
             return;
         }
 
