@@ -1,9 +1,6 @@
 package gui.ventanas;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
+import java.awt.*; 
 import java.util.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -14,131 +11,165 @@ import gui.clases.Jugador;
 import gui.clases.Liga;
 import gui.clases.Usuario;
 
-/**
- * Panel que muestra la tabla de clasificación de la liga actual.
- * Ordena a los usuarios según los puntos totales de sus jugadores.
- */
 public class PanelClasificacion extends JPanel {
 
     private JTable clasificacion;
     private DefaultTableModel tableModel;
-    private final Liga ligaActual; // Objeto Liga que vamos a mostrar
+    private final Liga ligaActual;
+    private JLabel lblJornada; 
 
-    
     public PanelClasificacion(Liga liga) {
         this.ligaActual = liga;
         setLayout(new BorderLayout());
         setBackground(new Color(18, 18, 18));
+        
+        // --- ENCABEZADO ---
+        JPanel panelNorte = new JPanel(new GridLayout(2, 1));
+        panelNorte.setBackground(new Color(18, 18, 18));
+        panelNorte.setBorder(BorderFactory.createEmptyBorder(15, 0, 15, 0));
 
-        if (ligaActual == null) {
-            JLabel error = new JLabel(
-                    "<html><center>⚠️ No estás unido a ninguna liga. <br>Por favor, únete a una liga desde la pantalla anterior para ver la clasificación.</center></html>",
-                    SwingConstants.CENTER);
-            error.setForeground(new Color(231, 76, 60)); // Rojo oscuro
-            error.setFont(new Font("Segoe UI", Font.BOLD, 14));
-            add(error, BorderLayout.CENTER);
-            return;
-        }
-
-        // Título de la Liga
         JLabel titulo = new JLabel("Clasificación - " + ligaActual.getNombre(), SwingConstants.CENTER);
-        titulo.setFont(titulo.getFont().deriveFont(Font.BOLD, 20f));
+        titulo.setFont(new Font("Segoe UI", Font.BOLD, 24));
         titulo.setForeground(Color.WHITE);
-        titulo.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
-        add(titulo, BorderLayout.NORTH);
 
-        // Inicializar tabla de clasificación
-        inicializarTabla();
-        cargarDatosClasificacion();
+        lblJornada = new JLabel("Jornada " + obtenerJornadaActual() + " / 32", SwingConstants.CENTER);
+        lblJornada.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        lblJornada.setForeground(new Color(46, 204, 113));
 
-        JScrollPane scrollPane = new JScrollPane(clasificacion);
-        scrollPane.setBackground(new Color(18, 18, 18));
-        scrollPane.getViewport().setBackground(new Color(18, 18, 18));
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        panelNorte.add(titulo);
+        panelNorte.add(lblJornada);
+        add(panelNorte, BorderLayout.NORTH);
 
-        add(scrollPane, BorderLayout.CENTER);
-    }
-
-    private void inicializarTabla() {
-        String[] columnas = { "Pos", "Usuario", "Puntos" };
+        // --- TABLA ---
+        String[] columnas = {"Pos", "Usuario", "Puntos Total", "Equipo"};
         tableModel = new DefaultTableModel(columnas, 0) {
             @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
+            public boolean isCellEditable(int row, int column) { return false; }
         };
-
+        
         clasificacion = new JTable(tableModel);
-        clasificacion.setBackground(new Color(28, 28, 28));
+        estilizarTabla();
+        JScrollPane scroll = new JScrollPane(clasificacion);
+        scroll.getViewport().setBackground(new Color(18, 18, 18));
+        scroll.setBorder(BorderFactory.createEmptyBorder());
+        add(scroll, BorderLayout.CENTER);
+
+        // --- BOTÓN SIMULAR ---
+        JButton btnSimular = new JButton("SIMULAR JORNADA " + (obtenerJornadaActual() + 1));
+        btnSimular.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        btnSimular.setBackground(new Color(46, 204, 113));
+        btnSimular.setForeground(Color.WHITE);
+        btnSimular.setFocusPainted(false);
+        btnSimular.addActionListener(e -> simularJornada());
+        add(btnSimular, BorderLayout.SOUTH);
+
+        cargarDatosClasificacion();
+    }
+
+    private void estilizarTabla() {
+        clasificacion.setBackground(new Color(30, 30, 30));
         clasificacion.setForeground(Color.WHITE);
-        clasificacion.setSelectionBackground(new Color(40, 40, 40));
-        clasificacion.setGridColor(new Color(40, 40, 40));
         clasificacion.setRowHeight(30);
-
-        // Estilo del encabezado
+        clasificacion.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         clasificacion.getTableHeader().setBackground(new Color(40, 40, 40));
-        clasificacion.getTableHeader().setForeground(Color.WHITE);
+        clasificacion.getTableHeader().setForeground(new Color(231, 76, 60));
         clasificacion.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
-        clasificacion.getTableHeader().setReorderingAllowed(false);
-
-        // Renderer para centrar contenido
+        
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-
-        // Aplicar renderer y ancho
-        clasificacion.getColumnModel().getColumn(0).setPreferredWidth(50);
-        clasificacion.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
-
-        clasificacion.getColumnModel().getColumn(1).setPreferredWidth(200);
-
-        clasificacion.getColumnModel().getColumn(2).setPreferredWidth(100);
-        clasificacion.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
+        for(int i=0; i<4; i++) clasificacion.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
     }
 
-    // Método que carga los datos de la liga actual
     private void cargarDatosClasificacion() {
-        if (ligaActual == null)
-            return;
-
         tableModel.setRowCount(0);
-
-        // Obtenemos la lista de usuarios ya ordenada por puntos (gracias al método en
-        // Liga)
-        List<Usuario> listaClasificacion = ligaActual.getClasificacion();
-
-        int posicion = 1;
-        for (Usuario u : listaClasificacion) {
-            // Si no puedes acceder a puntosUsuario directamente (es privado en Liga),
-            // quizás debas moverlo a GestorDatos o hacerlo público.
-            // Asumo que tienes acceso o que tienes una versión pública/estática
-            // Para este ejemplo, asumimos que Liga.puntosUsuario(Usuario) es accesible o
-            // existe un equivalente.
-
-            // Si da error, puedes crear una clase auxiliar para calcular los puntos
-            int puntos = 0; // **Reemplazar con la llamada correcta a la lógica de puntos**
-            try {
-                // Hacemos una llamada simple, pero esto depende de tu estructura exacta
-                // Por simplicidad, asumimos que tienes un método accesible.
-                puntos = calcularPuntos(u);
-            } catch (Exception e) {
-                puntos = 0; // En caso de que falle la lógica
+        java.util.List<Usuario> usuariosLiga = new ArrayList<>();
+        
+        // --- CORRECCIÓN: Buscamos usuarios mirando su ID de liga, 
+        // así no necesitamos tocar la clase Liga.java ---
+        for (Usuario u : GestorDatos.usuarios.values()) {
+            if (u.getLigaActualId() == ligaActual.getId()) {
+                usuariosLiga.add(u);
             }
+        }
+        // ------------------------------------------------
 
-            tableModel.addRow(new Object[] {
-                    posicion++,
-                    u.getNombre(),
-                    puntos
-            });
+        usuariosLiga.sort((u1, u2) -> Integer.compare(calcularPuntos(u2), calcularPuntos(u1)));
+
+        int pos = 1;
+        for (Usuario u : usuariosLiga) {
+            int puntos = calcularPuntos(u);
+            int numJugadores = (u.getJugadores() != null) ? u.getJugadores().size() : 0;
+            tableModel.addRow(new Object[]{pos++, u.getNombre(), puntos, numJugadores + " Jugadores"});
         }
     }
 
-    private int calcularPuntos(Usuario usuario) {
+    private int calcularPuntos(Usuario u) {
         int total = 0;
-        for (int idJ : usuario.getJugadores()) {
-            Jugador j = GestorDatos.jugadores.get(idJ);
-            if (j != null)
-                total += j.getTotalPuntos(); // Asumiendo que Jugador tiene getTotalPuntos()
+        if (u.getJugadores() == null) return 0;
+        for (Integer idJugador : u.getJugadores()) {
+            Jugador j = GestorDatos.jugadores.get(idJugador);
+            // Comprobamos que j exista y tenga lista de puntos
+            if (j != null && j.getPuntosPorJornada() != null) {
+                for(Integer p : j.getPuntosPorJornada()) {
+                    if(p != null) total += p;
+                }
+            }
         }
         return total;
+    }
+
+    private int obtenerJornadaActual() {
+        if (GestorDatos.jugadores.isEmpty()) return 0;
+        // Buscamos un jugador cualquiera que no sea nulo
+        for (Jugador j : GestorDatos.jugadores.values()) {
+            if (j != null && j.getPuntosPorJornada() != null) {
+                int cont = 0;
+                for (Integer puntos : j.getPuntosPorJornada()) {
+                    if (puntos != null) cont++;
+                }
+                return cont;
+            }
+        }
+        return 0;
+    }
+
+    private void simularJornada() {
+        // Ventana de carga simple
+        JDialog carga = new JDialog();
+        carga.setUndecorated(true);
+        carga.setSize(300, 50);
+        carga.setLocationRelativeTo(this);
+        JProgressBar bar = new JProgressBar();
+        bar.setIndeterminate(true);
+        carga.add(new JLabel(" Jugando partidos...", SwingConstants.CENTER), BorderLayout.NORTH);
+        carga.add(bar, BorderLayout.CENTER);
+        carga.setModal(false); 
+        carga.setVisible(true);
+
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                Thread.sleep(1500); 
+                Random r = new Random();
+                int jornadaActual = obtenerJornadaActual();
+                
+                for (Jugador j : GestorDatos.jugadores.values()) {
+                    if (j != null) {
+                        int puntos = r.nextInt(16);
+                        // Asegúrate de que este método existe en Jugador.java
+                        j.setPuntosEnJornada(jornadaActual + 1, puntos);
+                    }
+                }
+                return null;
+            }
+            @Override
+            protected void done() {
+                carga.dispose();
+                cargarDatosClasificacion();
+                lblJornada.setText("Jornada " + obtenerJornadaActual() + " / 32");
+                JOptionPane.showMessageDialog(PanelClasificacion.this, "Jornada finalizada!");
+            }
+        };
+        worker.execute();
     }
 }
