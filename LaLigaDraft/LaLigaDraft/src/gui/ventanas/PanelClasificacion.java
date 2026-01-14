@@ -17,6 +17,7 @@ public class PanelClasificacion extends JPanel {
     private DefaultTableModel tableModel;
     private final Liga ligaActual;
     private JLabel lblJornada; 
+    private JButton btnSimular; // <--- 1. AHORA EL BOTÓN ES UNA VARIABLE DE CLASE
 
     public PanelClasificacion(Liga liga) {
         this.ligaActual = liga;
@@ -55,11 +56,23 @@ public class PanelClasificacion extends JPanel {
         add(scroll, BorderLayout.CENTER);
 
         // --- BOTÓN SIMULAR ---
-        JButton btnSimular = new JButton("SIMULAR JORNADA " + (obtenerJornadaActual() + 1));
+        // Calculamos la siguiente jornada
+        int siguienteJornada = obtenerJornadaActual() + 1;
+        if (siguienteJornada > 32) siguienteJornada = 32;
+
+        btnSimular = new JButton("SIMULAR JORNADA " + siguienteJornada);
         btnSimular.setFont(new Font("Segoe UI", Font.BOLD, 18));
         btnSimular.setBackground(new Color(46, 204, 113));
         btnSimular.setForeground(Color.WHITE);
         btnSimular.setFocusPainted(false);
+        
+        // Si ya hemos acabado (jornada 32), desactivamos el botón
+        if (obtenerJornadaActual() >= 32) {
+            btnSimular.setText("LIGA FINALIZADA");
+            btnSimular.setEnabled(false);
+            btnSimular.setBackground(Color.GRAY);
+        }
+
         btnSimular.addActionListener(e -> simularJornada());
         add(btnSimular, BorderLayout.SOUTH);
 
@@ -84,14 +97,11 @@ public class PanelClasificacion extends JPanel {
         tableModel.setRowCount(0);
         java.util.List<Usuario> usuariosLiga = new ArrayList<>();
         
-        // --- CORRECCIÓN: Buscamos usuarios mirando su ID de liga, 
-        // así no necesitamos tocar la clase Liga.java ---
         for (Usuario u : GestorDatos.usuarios.values()) {
             if (u.getLigaActualId() == ligaActual.getId()) {
                 usuariosLiga.add(u);
             }
         }
-        // ------------------------------------------------
 
         usuariosLiga.sort((u1, u2) -> Integer.compare(calcularPuntos(u2), calcularPuntos(u1)));
 
@@ -108,7 +118,6 @@ public class PanelClasificacion extends JPanel {
         if (u.getJugadores() == null) return 0;
         for (Integer idJugador : u.getJugadores()) {
             Jugador j = GestorDatos.jugadores.get(idJugador);
-            // Comprobamos que j exista y tenga lista de puntos
             if (j != null && j.getPuntosPorJornada() != null) {
                 for(Integer p : j.getPuntosPorJornada()) {
                     if(p != null) total += p;
@@ -120,7 +129,6 @@ public class PanelClasificacion extends JPanel {
 
     private int obtenerJornadaActual() {
         if (GestorDatos.jugadores.isEmpty()) return 0;
-        // Buscamos un jugador cualquiera que no sea nulo
         for (Jugador j : GestorDatos.jugadores.values()) {
             if (j != null && j.getPuntosPorJornada() != null) {
                 int cont = 0;
@@ -134,7 +142,8 @@ public class PanelClasificacion extends JPanel {
     }
 
     private void simularJornada() {
-        // Ventana de carga simple
+        if (obtenerJornadaActual() >= 32) return;
+
         JDialog carga = new JDialog();
         carga.setUndecorated(true);
         carga.setSize(300, 50);
@@ -156,7 +165,6 @@ public class PanelClasificacion extends JPanel {
                 for (Jugador j : GestorDatos.jugadores.values()) {
                     if (j != null) {
                         int puntos = r.nextInt(16);
-                        // Asegúrate de que este método existe en Jugador.java
                         j.setPuntosEnJornada(jornadaActual + 1, puntos);
                     }
                 }
@@ -166,7 +174,19 @@ public class PanelClasificacion extends JPanel {
             protected void done() {
                 carga.dispose();
                 cargarDatosClasificacion();
-                lblJornada.setText("Jornada " + obtenerJornadaActual() + " / 32");
+                
+                // --- 2. AQUÍ ACTUALIZAMOS EL TEXTO DE LA JORNADA Y DEL BOTÓN ---
+                int nuevaJornada = obtenerJornadaActual();
+                lblJornada.setText("Jornada " + nuevaJornada + " / 32");
+                
+                if (nuevaJornada >= 32) {
+                    btnSimular.setText("LIGA FINALIZADA");
+                    btnSimular.setEnabled(false);
+                    btnSimular.setBackground(Color.GRAY);
+                } else {
+                    btnSimular.setText("SIMULAR JORNADA " + (nuevaJornada + 1));
+                }
+                
                 JOptionPane.showMessageDialog(PanelClasificacion.this, "Jornada finalizada!");
             }
         };
