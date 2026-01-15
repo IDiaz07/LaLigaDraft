@@ -38,24 +38,6 @@ public class Main {
         ventanaCarga.setLocationRelativeTo(null);
         ventanaCarga.setVisible(true);
 
-        /*// --- 2. CARGA DE DATOS ---
-        try {
-            for(int i=0; i<30; i++) { Thread.sleep(10); barra.setValue(i); }
-            
-            estado.setText("Conectando base de datos...");
-            GestorDatos.inicializar(); 
-            
-            barra.setValue(70);
-            estado.setText("Cargando sistema...");
-            // Si tienes el método rellenarMercadoSiVacio úsalo, si no, borra esta línea:
-            try { GestorDatos.rellenarMercadoSiVacio(); } catch(Exception e){}
-            
-            for(int i=70; i<=100; i++) { Thread.sleep(10); barra.setValue(i); }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }*/
-        
         try {
             // Animación inicial de la barra
             for(int i=0; i<30; i++) { Thread.sleep(10); barra.setValue(i); }
@@ -64,23 +46,6 @@ public class Main {
             estado.setText("Conectando base de datos...");
             GestorDatos.inicializar(); 
             
-            // B) PRUEBA DE RECURSIVIDAD (Aquí es donde los datos ya están en el Map)
-            estado.setText("Calculando estadísticas (Recursividad)...");
-            
-            // Convertimos el Map de jugadores a una Lista para poder recorrerla por índice
-            java.util.List<gui.clases.Jugador> listaParaRecursividad = new java.util.ArrayList<>(GestorDatos.jugadores.values());
-            
-            // Verificamos si hay datos antes de llamar al método
-            if (!listaParaRecursividad.isEmpty()) {
-                int valorTotal = GestorDatos.calcularValorTotalRecursivo(listaParaRecursividad, 0);
-                
-                System.out.println("\n==========================================");
-                System.out.println("   DATOS CARGADOS: " + listaParaRecursividad.size() + " jugadores.");
-                System.out.println("   RESULTADO RECURSIVO: " + valorTotal + " €");
-                System.out.println("==========================================\n");
-            } else {
-                System.out.println("[ALERTA] La lista de jugadores está vacía. Revisa database.db");
-            }
 
             // C) Continuar con la carga normal
             barra.setValue(70);
