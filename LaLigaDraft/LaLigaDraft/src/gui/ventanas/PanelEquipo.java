@@ -313,9 +313,14 @@ public class PanelEquipo extends JPanel {
         }
 
         // Resto hasta 11: DELANTEROS
-        for (int i = titularesActuales.size(); i < 11; i++) {
-            titularesActuales.add(i - titularesActuales.size() < delan.size() ? delan.get(i - titularesActuales.size())
-                    : jugadorPlaceholder(Posicion.DEL));
+        int inicioDel = titularesActuales.size();
+
+        for (int i = 0; i < del; i++) {
+            titularesActuales.add(
+                i < delan.size()
+                    ? delan.get(i)
+                    : jugadorPlaceholder(Posicion.DEL)
+            );
         }
 
         System.out.println("Titulares creados: " + titularesActuales.size());
@@ -347,11 +352,17 @@ public class PanelEquipo extends JPanel {
         int med = Integer.parseInt(partes[1]);
         int del = Integer.parseInt(partes[2]);
 
+        System.out.println(titularesActuales);
         int index = 0;
-
+        
         // PORTERO (index 0)
         if (index < titularesActuales.size() && index < labelsTitulares.size()) {
-            colocarJugador(titularesActuales.get(index), labelsTitulares.get(index), w / 2 - 40, h - 50);
+        	colocarJugador(
+        		    titularesActuales.get(index),
+        		    labelsTitulares.get(index),
+        		    w / 2 - 40,
+        		    h - 90
+        		);
             index++;
         }
 
@@ -365,6 +376,9 @@ public class PanelEquipo extends JPanel {
 
         // DELANTEROS
         colocarLinea(del, h / 5, index);
+
+
+
 
         campo.repaint();
         System.out.println("✅ Campo repintado");
