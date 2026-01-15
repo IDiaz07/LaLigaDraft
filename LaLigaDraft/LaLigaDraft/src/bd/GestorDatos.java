@@ -750,17 +750,15 @@ public class GestorDatos {
         }
     }
 
-    //RECURSIVIDAD: Suma el valor de mercado de todos los jugadores de forma recursiva
-    public static void mostrarNombresRecursivo(List<Jugador> lista, int indice) {
-        // 1. CASO BASE: Si ya hemos mostrado todos, paramos.
-        if (indice == lista.size()) {
-        	System.out.println("--- Fin de la lista ---");
-            return;
-        }
-     // 2. ACCIÓN: Imprimimos el nombre del jugador actual
-        System.out.println("Jugador nº" + (indice + 1) + ": " + lista.get(indice).getNombre());
-
-        // 3. PASO RECURSIVO: Llamamos al siguiente
-        mostrarNombresRecursivo(lista, indice + 1); 
+    public static void cuentaAtrasPartido(int segundos) {
+    	//Caso base: cuando el tiempose agota
+    	if (segundos <= 0) {
+    		System.out.println("¡¡PIIIIIIII!! ¡Empieza el partido!");
+    		return;
+    	}
+    	//Accion: mostrar el segundo actual
+    	System.out.println("Iniciando en..." + segundos);
+    	//Llamada recursiva: restamos 1 al contador
+    	cuentaAtrasPartido(segundos -1);
     }
 }

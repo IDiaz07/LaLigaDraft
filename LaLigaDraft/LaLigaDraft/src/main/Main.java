@@ -45,7 +45,11 @@ public class Main {
             // A) Conectar y Cargar desde SQLite
             estado.setText("Conectando base de datos...");
             GestorDatos.inicializar(); 
-
+            
+            System.out.println("PARTIDO INICIANDO");
+            GestorDatos.cuentaAtrasPartido(5);
+            System.out.println("----------------------------");
+            
             // C) Continuar con la carga normal
             barra.setValue(70);
             estado.setText("Cargando sistema...");
