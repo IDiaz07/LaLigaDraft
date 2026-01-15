@@ -49,7 +49,7 @@ public class VentanaPrincipal extends JFrame {
             if (!s.equals("Dashboard") &&
                 !s.equals("Equipo") &&
                 !s.equals("Clasificación") &&
-                !s.equals("Mercado")) {
+                !s.equals("Mercado") && !s.equals("Actividad")){
 
                 panelContenido.add(crearPanelPlaceholder(s), s);
             }
@@ -57,6 +57,7 @@ public class VentanaPrincipal extends JFrame {
         
         // DASHBOARD REAL
         panelContenido.add(new PanelDashboard(usuario), "Dashboard");
+        panelContenido.add(new PanelActividad(usuario), "Actividad");
 
         // EQUIPO (con datos YA cargados)
         try {
