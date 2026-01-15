@@ -96,23 +96,33 @@ public class PanelClasificacion extends JPanel {
 
     private void cargarDatosClasificacion() {
         tableModel.setRowCount(0);
-        java.util.List<Usuario> usuariosLiga = new ArrayList<>();
-        
-        for (Usuario u : GestorDatos.usuarios.values()) {
-            if (u.getLigaActualId() == ligaActual.getId()) {
+
+        List<Usuario> usuariosLiga = new ArrayList<>();
+
+        for (Integer idUsuario : ligaActual.getUsuariosIds()) {
+            Usuario u = GestorDatos.usuarios.get(idUsuario);
+            if (u != null) {
                 usuariosLiga.add(u);
             }
         }
 
-        usuariosLiga.sort((u1, u2) -> Integer.compare(calcularPuntos(u2), calcularPuntos(u1)));
+        usuariosLiga.sort((u1, u2) ->
+                Integer.compare(calcularPuntos(u2), calcularPuntos(u1)));
 
         int pos = 1;
         for (Usuario u : usuariosLiga) {
             int puntos = calcularPuntos(u);
             int numJugadores = u.getJugadoresLiga(ligaActual.getId()).size();
-            tableModel.addRow(new Object[]{pos++, u.getNombre(), puntos, numJugadores + " Jugadores"});
+
+            tableModel.addRow(new Object[]{
+                    pos++,
+                    u.getNombre(),
+                    puntos,
+                    numJugadores + " Jugadores"
+            });
         }
     }
+
 
     private int calcularPuntos(Usuario u) {
         int total = 0;
@@ -132,18 +142,18 @@ public class PanelClasificacion extends JPanel {
     }
 
     private int obtenerJornadaActual() {
-        if (GestorDatos.jugadores.isEmpty()) return 0;
+        int max = 0;
+
         for (Jugador j : GestorDatos.jugadores.values()) {
-            if (j != null && j.getPuntosPorJornada() != null) {
-                int cont = 0;
-                for (Integer puntos : j.getPuntosPorJornada()) {
-                    if (puntos != null) cont++;
-                }
-                return cont;
+            int cont = 0;
+            for (Integer p : j.getPuntosPorJornada()) {
+                if (p != null) cont++;
             }
+            max = Math.max(max, cont);
         }
-        return 0;
+        return max;
     }
+
 
     private void simularJornada() {
         if (obtenerJornadaActual() >= 32) return;

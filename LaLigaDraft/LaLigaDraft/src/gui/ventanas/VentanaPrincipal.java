@@ -46,10 +46,17 @@ public class VentanaPrincipal extends JFrame {
         String[] secciones = { "Dashboard", "Equipo", "Clasificación", "Mercado", "Actividad" };
 
         for (String s : secciones) {
-            if (!s.equals("Equipo") && !s.equals("Clasificación") && !s.equals("Mercado")) {
+            if (!s.equals("Dashboard") &&
+                !s.equals("Equipo") &&
+                !s.equals("Clasificación") &&
+                !s.equals("Mercado")) {
+
                 panelContenido.add(crearPanelPlaceholder(s), s);
             }
         }
+        
+        // DASHBOARD REAL
+        panelContenido.add(new PanelDashboard(usuario), "Dashboard");
 
         // EQUIPO (con datos YA cargados)
         try {
@@ -121,9 +128,6 @@ public class VentanaPrincipal extends JFrame {
         contenedor.add(menu, BorderLayout.SOUTH);
 
         add(contenedor);
-
-        // Mostrar Dashboard por defecto
-        cardLayout.show(panelContenido, "Dashboard");
 
         // Equipo inicial si corresponde
         if (usuario.getJugadoresLigaActual().size() == 15) {

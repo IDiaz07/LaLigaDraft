@@ -92,14 +92,16 @@ public class GestorDatos {
                     """);
 
             st.execute("""
-                        CREATE TABLE IF NOT EXISTS usuarios_ligas (
-                            usuarioId INTEGER,
-                            ligaId INTEGER,
-                            PRIMARY KEY(usuarioId, ligaId),
-                            FOREIGN KEY(usuarioId) REFERENCES usuarios(id),
-                            FOREIGN KEY(ligaId) REFERENCES ligas(id)
-                        );
-                    """);
+            	    CREATE TABLE IF NOT EXISTS usuarios_ligas (
+            	        usuarioId INTEGER,
+            	        ligaId INTEGER,
+            	        saldo INTEGER,
+            	        PRIMARY KEY(usuarioId, ligaId),
+            	        FOREIGN KEY(usuarioId) REFERENCES usuarios(id),
+            	        FOREIGN KEY(ligaId) REFERENCES ligas(id)
+            	    );
+            	""");
+
 
             // no creamos ligas_mercado aquí porque podrías haberla creado manualmente,
             // pero si quieres que se cree automáticamente, descomenta lo siguiente:
@@ -247,7 +249,7 @@ public class GestorDatos {
     public static void cargarUsuariosLiga(Liga liga) {
         String sql = """
                     SELECT u.id, u.nombre, u.email, u.telefono, u.contrasena,
-                           u.saldo, u.equipoMostrado, u.ligaActualId
+                           ul.saldo, u.equipoMostrado, u.ligaActualId
                     FROM usuarios u
                     JOIN usuarios_ligas ul ON u.id = ul.usuarioId
                     WHERE ul.ligaId = ?
@@ -275,6 +277,9 @@ public class GestorDatos {
                     u.setLigaActualId(rs.getInt("ligaActualId"));
                     usuarios.put(id, u);
                 }
+                
+                int saldo = rs.getInt("saldo");
+                usuarios.get(id).actualizarSaldo(liga.getId(), saldo);
 
                 liga.addUsuario(id);
                 List<Integer> jug = cargarJugadoresUsuarioLiga(id, liga.getId());
@@ -357,6 +362,29 @@ public class GestorDatos {
             e.printStackTrace();
         }
     }
+    
+    
+    // -------------------- GUARDAR PLANTILLAS --------------------
+    public static void guardarSaldoUsuarioLiga(int usuarioId, int ligaId, int saldo) {
+        String sql = """
+            UPDATE usuarios_ligas
+            SET saldo = ?
+            WHERE usuarioId = ? AND ligaId = ?
+        """;
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, saldo);
+            ps.setInt(2, usuarioId);
+            ps.setInt(3, ligaId);
+            ps.executeUpdate();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
 
     // -------------------- GUARDAR ENTIDADES --------------------
@@ -582,19 +610,24 @@ public class GestorDatos {
     }
 
     public static void agregarUsuarioALiga(int userId, int ligaId) {
-        String sql = "INSERT OR IGNORE INTO usuarios_ligas (usuarioId, ligaId) VALUES (?, ?)";
+    	String sql = """
+    		    INSERT OR IGNORE INTO usuarios_ligas (usuarioId, ligaId, saldo)
+    		    VALUES (?, ?, ?)
+    		""";
 
         try (Connection conn = getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, userId);
             ps.setInt(2, ligaId);
+            ps.setInt(3, 100_000_000);
             ps.executeUpdate();
 
             Usuario u = usuarios.get(userId);
             Liga l = ligas.get(ligaId);
 
             if (u != null && l != null) {
+            	u.actualizarSaldo(ligaId, 100_000_000);
                 if (!u.getLigas().contains(ligaId))
                     u.getLigas().add(ligaId);
                 if (!l.getUsuariosIds().contains(userId))
@@ -726,7 +759,10 @@ public class GestorDatos {
         }
 
         int coste = jugador.getValorMercado();
-        comprador.actualizarSaldo(liga.getId(), saldoActual - coste);
+        int nuevoSaldo = saldoActual - coste;
+        comprador.actualizarSaldo(liga.getId(), nuevoSaldo);
+        guardarSaldoUsuarioLiga(comprador.getId(), liga.getId(), nuevoSaldo);
+
 
         liga.getMercadoIds().remove(Integer.valueOf(jugador.getId()));
         comprador.addJugadorALiga(liga.getId(), jugador.getId());
