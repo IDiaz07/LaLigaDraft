@@ -2,6 +2,7 @@ package gui.ventanas;
 
 import java.awt.*; 
 import java.util.*;
+import java.util.List;
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
@@ -108,19 +109,22 @@ public class PanelClasificacion extends JPanel {
         int pos = 1;
         for (Usuario u : usuariosLiga) {
             int puntos = calcularPuntos(u);
-            int numJugadores = (u.getJugadores() != null) ? u.getJugadores().size() : 0;
+            int numJugadores = u.getJugadoresLiga(ligaActual.getId()).size();
             tableModel.addRow(new Object[]{pos++, u.getNombre(), puntos, numJugadores + " Jugadores"});
         }
     }
 
     private int calcularPuntos(Usuario u) {
         int total = 0;
-        if (u.getJugadores() == null) return 0;
-        for (Integer idJugador : u.getJugadores()) {
+
+        List<Integer> jugadoresLiga = u.getJugadoresLiga(ligaActual.getId());
+        if (jugadoresLiga.isEmpty()) return 0;
+
+        for (Integer idJugador : jugadoresLiga) {
             Jugador j = GestorDatos.jugadores.get(idJugador);
             if (j != null && j.getPuntosPorJornada() != null) {
-                for(Integer p : j.getPuntosPorJornada()) {
-                    if(p != null) total += p;
+                for (Integer p : j.getPuntosPorJornada()) {
+                    if (p != null) total += p;
                 }
             }
         }

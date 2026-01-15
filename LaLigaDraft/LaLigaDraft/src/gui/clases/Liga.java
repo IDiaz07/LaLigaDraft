@@ -88,7 +88,7 @@ public class Liga {
         for (int idU : usuarios) {
             Usuario u = GestorDatos.usuarios.get(idU);
             if (u != null)
-                jugadoresOcupados.addAll(u.getJugadores());
+            	jugadoresOcupados.addAll(u.getJugadoresLiga(id));
         }
 
         List<Jugador> disponibles = new ArrayList<>();
@@ -141,7 +141,7 @@ public class Liga {
 
     private int puntosUsuario(Usuario usuario) {
         int total = 0;
-        for (int idJ : usuario.getJugadores()) {
+        for (int idJ : usuario.getJugadoresLiga(id)) {
             Jugador j = GestorDatos.jugadores.get(idJ);
             if (j != null)
                 total += j.getTotalPuntos();

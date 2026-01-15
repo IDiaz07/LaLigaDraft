@@ -277,35 +277,70 @@ public class GestorDatos {
                 }
 
                 liga.addUsuario(id);
-                usuarios.get(id).setJugadores(cargarJugadoresUsuario(id));
+                List<Integer> jug = cargarJugadoresUsuarioLiga(id, liga.getId());
+                usuarios.get(id).setJugadoresParaLiga(liga.getId(), jug);
             }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+    
+    public static List<Integer> cargarJugadoresUsuarioLiga(int usuarioId, int ligaId) {
+        List<Integer> jugadores = new ArrayList<>();
+
+        String sql = """
+            SELECT jugador_id
+            FROM usuarios_jugadores
+            WHERE usuario_id = ? AND liga_id = ?
+        """;
+
+        try (Connection c = getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+
+            ps.setInt(1, usuarioId);
+            ps.setInt(2, ligaId);
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                jugadores.add(rs.getInt("jugador_id"));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return jugadores;
+    }
+
 
     // -------------------- GUARDAR PLANTILLAS --------------------
     public static void guardarPlantillas() {
+    	System.out.println("🚨 guardarPlantillas() LLAMADO");
         String sqlInsert = """
-                    INSERT OR IGNORE INTO usuarios_jugadores (usuario_id, jugador_id, liga_id)
-                    VALUES (?, ?, ?)
-                """;
+            INSERT OR IGNORE INTO usuarios_jugadores (usuario_id, jugador_id, liga_id)
+            VALUES (?, ?, ?)
+        """;
 
         try (Connection conn = getConnection();
-                PreparedStatement ps = conn.prepareStatement(sqlInsert)) {
+             PreparedStatement ps = conn.prepareStatement(sqlInsert)) {
 
             int total = 0;
+
             for (Usuario u : usuarios.values()) {
-                List<Integer> jug = u.getJugadores();
-                if (jug == null || jug.isEmpty())
-                    continue;
+            	System.out.println("👤 Usuario " + u.getId()
+                + " ligaActual=" + u.getLigaActualId()
+                + " jugadores=" + u.getJugadoresLigaActual());
+
+                //if (u.getLigaActualId() <= 0) continue;
+                System.out.println("👤 Usuario " + u.getId()
+                + " ligaActual=" + u.getLigaActualId()
+                + " jugadores=" + u.getJugadoresLigaActual());
+
+                List<Integer> jug = u.getJugadoresLigaActual();
+                if (jug == null || jug.isEmpty()) continue;
 
                 int ligaId = u.getLigaActualId();
-                if (ligaId == 0 && !ligas.isEmpty()) {
-                    ligaId = ligas.keySet().iterator().next();
-                    u.setLigaActualId(ligaId);
-                }
 
                 Set<Integer> unicos = new HashSet<>(jug);
                 for (int idJ : unicos) {
@@ -315,11 +350,14 @@ public class GestorDatos {
                     total += ps.executeUpdate();
                 }
             }
+
             System.out.println("✅ Plantillas guardadas: " + total + " registros únicos");
+
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
 
     // -------------------- GUARDAR ENTIDADES --------------------
     public static Usuario registrarUsuario(String nombre, String email, String telefono,
@@ -587,19 +625,6 @@ public class GestorDatos {
         return lista;
     }
 
-    public static void asignarUsuariosJugadores() {
-        for (Usuario usuario : usuarios.values()) {
-            if (usuario.getJugadores() == null || usuario.getJugadores().isEmpty()) {
-                List<Integer> ids = cargarJugadoresUsuario(usuario.getId());
-                if (ids == null || ids.isEmpty()) {
-                    asignarEquipoInicial(usuario);
-                } else {
-                    usuario.setJugadores(ids);
-                }
-            }
-        }
-    }
-
     public static void asignarEquipoInicial(Usuario usuario) {
         int intentos = 0;
         final int MAX_INTENTOS = 1000;
@@ -616,8 +641,8 @@ public class GestorDatos {
 
             Set<Integer> idsOcupados = new HashSet<>();
             for (Usuario u : usuarios.values()) {
-                if (u.getId() != usuario.getId() && u.getJugadores() != null) {
-                    idsOcupados.addAll(u.getJugadores());
+            	if (u.getId() != usuario.getId()) {
+                	idsOcupados.addAll(u.getJugadoresLiga(usuario.getLigaActualId()));
                 }
             }
 
@@ -663,7 +688,7 @@ public class GestorDatos {
             }
 
             if (valorTotal >= 110_000_000 && valorTotal <= 140_000_000) {
-                usuario.setJugadores(listaIds);
+            	usuario.setJugadoresParaLiga(usuario.getLigaActualId(), listaIds);
                 System.out.println("✅ Equipo asignado a " + usuario.getNombre() +
                         ": " + (valorTotal / 1_000_000) + "M€");
                 return;
@@ -672,7 +697,7 @@ public class GestorDatos {
             intentos++;
         }
 
-        usuario.setJugadores(listaIds);
+        usuario.setJugadoresParaLiga(usuario.getLigaActualId(), listaIds);
         int valorTotal = listaIds.stream()
                 .mapToInt(id -> jugadores.get(id).getValorMercado())
                 .sum();
@@ -685,8 +710,6 @@ public class GestorDatos {
         usuarios = cargarUsuarios();
         jugadores = cargarJugadores();
         ligas = cargarLigas(); // ahora devuelve Map<Integer,Liga>
-        asignarUsuariosJugadores();
-        guardarPlantillas();
     }
 
     public static void inicializar() {
@@ -706,7 +729,7 @@ public class GestorDatos {
         comprador.actualizarSaldo(liga.getId(), saldoActual - coste);
 
         liga.getMercadoIds().remove(Integer.valueOf(jugador.getId()));
-        comprador.addJugador(jugador.getId());
+        comprador.addJugadorALiga(liga.getId(), jugador.getId());
         guardarPlantillas();
         System.out.println("✅ Compra realizada: " + jugador.getNombre());
         return true;
@@ -727,18 +750,17 @@ public class GestorDatos {
         }
     }
 
+    //RECURSIVIDAD: Suma el valor de mercado de todos los jugadores de forma recursiva
     public static void mostrarNombresRecursivo(List<Jugador> lista, int indice) {
         // 1. CASO BASE: Si ya hemos mostrado todos, paramos.
         if (indice == lista.size()) {
-            System.out.println("--- Fin de la lista ---");
+        	System.out.println("--- Fin de la lista ---");
             return;
         }
-
-        // 2. ACCIÓN: Imprimimos el nombre del jugador actual
+     // 2. ACCIÓN: Imprimimos el nombre del jugador actual
         System.out.println("Jugador nº" + (indice + 1) + ": " + lista.get(indice).getNombre());
 
         // 3. PASO RECURSIVO: Llamamos al siguiente
-        mostrarNombresRecursivo(lista, indice + 1);
+        mostrarNombresRecursivo(lista, indice + 1); 
     }
-
 }

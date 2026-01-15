@@ -33,7 +33,7 @@ public class VentanaEquipoInicial extends JFrame {
         main.add(titulo, BorderLayout.NORTH);
 
         DefaultListModel<String> modelo = new DefaultListModel<>();
-        for (int id : usuario.getJugadores()) {
+        for (int id : usuario.getJugadoresLigaActual()) {
             Jugador j = GestorDatos.jugadores.get(id);
             modelo.addElement(j.getNombre() + " - " + j.getPosicion() + " - " + j.getEquipo());
         }

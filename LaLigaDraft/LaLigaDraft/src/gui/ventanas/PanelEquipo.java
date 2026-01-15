@@ -135,7 +135,7 @@ public class PanelEquipo extends JPanel {
         panel.setBackground(new Color(18, 18, 18));
 
         // 1. Obtener la plantilla completa y calcular el valor total
-        List<Jugador> todaLaPlantilla = usuario.getJugadores().stream()
+        List<Jugador> todaLaPlantilla = usuario.getJugadoresLigaActual().stream()
                 .map(id -> GestorDatos.jugadores.get(id))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
@@ -233,7 +233,7 @@ public class PanelEquipo extends JPanel {
 
     /** Selecciona los 15 jugadores del usuario (11 titulares + 4 suplentes) */
     private void seleccionarJugadoresIniciales() {
-        List<Jugador> todos = usuario.getJugadores().stream()
+    	List<Jugador> todos = usuario.getJugadoresLigaActual().stream()
                 .map(id -> GestorDatos.jugadores.get(id))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
@@ -273,7 +273,7 @@ public class PanelEquipo extends JPanel {
             formacion = "4-4-2";
 
         
-        List<Jugador> todos = usuario.getJugadores().stream()
+        List<Jugador> todos = usuario.getJugadoresLigaActual().stream()
                 .map(id -> GestorDatos.jugadores.get(id))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());

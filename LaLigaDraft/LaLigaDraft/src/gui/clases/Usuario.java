@@ -3,25 +3,22 @@ package gui.clases;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Modelo que representa un usuario de la aplicación.
- * Contiene datos personales, su plantilla de jugadores y participación en
- * ligas.
- */
 public class Usuario {
+
     private int id;
     private String nombre;
     private String email;
     private String telefono;
     private String contrasena;
 
-    // Mapa para guardar el saldo (dinero disponible) en cada liga donde participa
     private Map<Integer, Integer> saldoPorLiga = new HashMap<>();
+    private Map<Integer, List<Integer>> jugadoresPorLiga = new HashMap<>();
+    private List<Integer> ligas = new ArrayList<>();
 
-    private List<Integer> jugadores; // IDs de los jugadores en su equipo
-    private List<Integer> ligas; // IDs de las ligas donde participa
     private boolean equipoMostrado;
-    private int ligaActualId = -1; // ID de la liga seleccionada actualmente
+    private int ligaActualId = -1;
+
+    // -------------------- CONSTRUCTOR --------------------
 
     public Usuario(int id, String nombre, String email, String telefono, String contrasena) {
         this.id = id;
@@ -29,19 +26,59 @@ public class Usuario {
         this.email = email;
         this.telefono = telefono;
         this.contrasena = contrasena;
-        this.jugadores = new ArrayList<>();
-        this.ligas = new ArrayList<>();
-        this.equipoMostrado = false;
     }
 
-    
+    // -------------------- JUGADORES POR LIGA --------------------
 
-    public void addJugador(int idJugador) {
-        if (!jugadores.contains(idJugador)) {
-            jugadores.add(idJugador);
+    public List<Integer> getJugadoresLigaActual() {
+        return jugadoresPorLiga.getOrDefault(ligaActualId, new ArrayList<>());
+    }
+
+    public List<Integer> getJugadoresLiga(int ligaId) {
+        return jugadoresPorLiga.getOrDefault(ligaId, new ArrayList<>());
+    }
+
+    public void setJugadoresParaLiga(int ligaId, List<Integer> jugadores) {
+        jugadoresPorLiga.put(ligaId, jugadores);
+    }
+
+    public void addJugadorALiga(int ligaId, int jugadorId) {
+        jugadoresPorLiga
+                .computeIfAbsent(ligaId, k -> new ArrayList<>())
+                .add(jugadorId);
+    }
+
+    // -------------------- LIGAS --------------------
+
+    public void addLiga(int idLiga) {
+        if (!ligas.contains(idLiga)) {
+            ligas.add(idLiga);
         }
     }
-    
+
+    public List<Integer> getLigas() {
+        return ligas;
+    }
+
+    public int getLigaActualId() {
+        return ligaActualId;
+    }
+
+    public void setLigaActualId(int ligaActualId) {
+        this.ligaActualId = ligaActualId;
+    }
+
+    // -------------------- SALDO --------------------
+
+    public int getSaldo(int idLiga) {
+        return saldoPorLiga.getOrDefault(idLiga, 0);
+    }
+
+    public void actualizarSaldo(int idLiga, int nuevoSaldo) {
+        saldoPorLiga.put(idLiga, nuevoSaldo);
+    }
+
+    // -------------------- DATOS BÁSICOS --------------------
 
     public int getId() {
         return id;
@@ -79,17 +116,7 @@ public class Usuario {
         this.contrasena = contrasena;
     }
 
-    public List<Integer> getJugadores() {
-        return jugadores;
-    }
-
-    public void setJugadores(List<Integer> jugadores) {
-        this.jugadores = jugadores;
-    }
-
-    public List<Integer> getLigas() {
-        return ligas;
-    }
+    // -------------------- ESTADO UI --------------------
 
     public boolean isEquipoMostrado() {
         return equipoMostrado;
@@ -99,86 +126,93 @@ public class Usuario {
         this.equipoMostrado = equipoMostrado;
     }
 
-    public int getLigaActualId() {
-        return ligaActualId;
-    }
-
-    public void setLigaActualId(int ligaActualId) {
-        this.ligaActualId = ligaActualId;
-    }
+    // -------------------- SERIALIZACIÓN --------------------
 
     @Override
     public String toString() {
-        String jugStr = jugadores.stream().map(String::valueOf).collect(Collectors.joining(","));
-        String ligStr = ligas.stream().map(String::valueOf).collect(Collectors.joining(","));
+
+        String ligasStr = ligas.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
+
         String saldosStr = saldoPorLiga.entrySet().stream()
                 .map(e -> e.getKey() + ":" + e.getValue())
                 .collect(Collectors.joining(","));
 
+        String jugadoresStr = jugadoresPorLiga.entrySet().stream()
+                .map(e -> e.getKey() + "=" +
+                        e.getValue().stream()
+                                .map(String::valueOf)
+                                .collect(Collectors.joining(",")))
+                .collect(Collectors.joining("|"));
+
         return id + ";" + nombre + ";" + email + ";" + telefono + ";" + contrasena + ";" +
-                "0" + ";" + jugStr + ";" + ligStr + ";" + (equipoMostrado ? "1" : "0") + ";" +
+                ligasStr + ";" + jugadoresStr + ";" +
+                (equipoMostrado ? "1" : "0") + ";" +
                 ligaActualId + ";" + saldosStr;
     }
 
+    // -------------------- DESERIALIZACIÓN --------------------
+
     public static Usuario fromFileString(String linea) {
+
         String[] partes = linea.split(";", -1);
-        if (partes.length < 5)
-            return null;
+        if (partes.length < 5) return null;
 
-        Usuario u = new Usuario(Integer.parseInt(partes[0]), partes[1], partes[2], partes[3], partes[4]);
+        Usuario u = new Usuario(
+                Integer.parseInt(partes[0]),
+                partes[1],
+                partes[2],
+                partes[3],
+                partes[4]
+        );
 
-        if (partes.length >= 7 && !partes[6].isEmpty()) {
-            for (String j : partes[6].split(","))
-                if (!j.trim().isEmpty())
-                    u.addJugador(Integer.parseInt(j.trim()));
+        if (partes.length > 5 && !partes[5].isEmpty()) {
+            for (String l : partes[5].split(",")) {
+                u.addLiga(Integer.parseInt(l));
+            }
         }
-        if (partes.length >= 8 && !partes[7].isEmpty()) {
-            for (String l : partes[7].split(","))
-                if (!l.trim().isEmpty())
-                    u.ligas.add(Integer.parseInt(l.trim()));
+
+        if (partes.length > 6 && !partes[6].isEmpty()) {
+            for (String bloque : partes[6].split("\\|")) {
+                String[] kv = bloque.split("=");
+                if (kv.length != 2) continue;
+
+                int ligaId = Integer.parseInt(kv[0]);
+                List<Integer> jugadores = new ArrayList<>();
+
+                for (String j : kv[1].split(",")) {
+                    jugadores.add(Integer.parseInt(j));
+                }
+
+                u.setJugadoresParaLiga(ligaId, jugadores);
+            }
         }
-        if (partes.length >= 9)
-            u.equipoMostrado = "1".equals(partes[8]);
-        if (partes.length >= 10) {
+
+        if (partes.length > 7) {
+            u.equipoMostrado = "1".equals(partes[7]);
+        }
+
+        if (partes.length > 8) {
             try {
-                u.ligaActualId = Integer.parseInt(partes[9]);
+                u.ligaActualId = Integer.parseInt(partes[8]);
             } catch (Exception e) {
                 u.ligaActualId = -1;
             }
         }
-        if (partes.length >= 11 && !partes[10].isEmpty()) {
-            for (String s : partes[10].split(",")) {
+
+        if (partes.length > 9 && !partes[9].isEmpty()) {
+            for (String s : partes[9].split(",")) {
                 String[] kv = s.split(":");
                 if (kv.length == 2) {
-                    try {
-                        u.saldoPorLiga.put(Integer.parseInt(kv[0]), Integer.parseInt(kv[1]));
-                    } catch (Exception e) {
-                    }
+                    u.saldoPorLiga.put(
+                            Integer.parseInt(kv[0]),
+                            Integer.parseInt(kv[1])
+                    );
                 }
             }
         }
+
         return u;
-    }
-
-    public void addLiga(int idLiga) {
-        if (!ligas.contains(idLiga)) {
-            ligas.add(idLiga);
-        }
-    }
-
-    public int getSaldo(int idLiga) {
-        if (saldoPorLiga == null)
-            return 0;
-        return saldoPorLiga.getOrDefault(idLiga, 0);
-    }
-
-    public void actualizarSaldo(int idLiga, int nuevoSaldo) {
-        // --- PROTECCIÓN CONTRA EL ERROR NULLPOINTER ---
-        if (saldoPorLiga == null) {
-            saldoPorLiga = new HashMap<>();
-        }
-        // ----------------------------------------------
-
-        saldoPorLiga.put(idLiga, nuevoSaldo);
     }
 }

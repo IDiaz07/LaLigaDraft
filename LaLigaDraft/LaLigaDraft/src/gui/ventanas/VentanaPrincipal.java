@@ -26,6 +26,10 @@ public class VentanaPrincipal extends JFrame {
         System.out.println("✅ Jugadores cargados: " + GestorDatos.jugadores.size());
 
         Liga ligaActual = GestorDatos.ligas.get(usuario.getLigaActualId());
+        
+        if (ligaActual != null) {
+            GestorDatos.cargarUsuariosLiga(ligaActual);
+        }
 
         setTitle("LaLigaDraft");
         setSize(600, 900);
@@ -122,13 +126,14 @@ public class VentanaPrincipal extends JFrame {
         cardLayout.show(panelContenido, "Dashboard");
 
         // Equipo inicial si corresponde
-        if (usuario.getJugadores() != null && usuario.getJugadores().size() == 15) {
+        if (usuario.getJugadoresLigaActual().size() == 15) {
             SwingUtilities.invokeLater(() -> {
                 new VentanaEquipoInicial(usuario).setVisible(true);
             });
         }
 
-        System.out.println("✅ VentanaPrincipal lista - Jugadores del usuario: " + usuario.getJugadores().size());
+        System.out.println("✅ VentanaPrincipal lista - Jugadores del usuario (liga actual): " 
+                + usuario.getJugadoresLigaActual().size());
     }
 
     

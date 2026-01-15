@@ -2,6 +2,7 @@ package gui.ventanas;
 
 import java.awt.*;
 import javax.swing.*;
+import java.util.List;
 
 import bd.GestorDatos;
 import gui.clases.Liga;
@@ -95,14 +96,21 @@ public class VentanaSeleccionLiga extends JFrame {
         GestorDatos.agregarUsuarioALiga(usuario.getId(), liga.getId());
         usuario.setLigaActualId(liga.getId());
 
-        if (usuario.getJugadores() == null || usuario.getJugadores().isEmpty()) {
+        List<Integer> jugadoresBD =
+                GestorDatos.cargarJugadoresUsuarioLiga(usuario.getId(), liga.getId());
+
+        if (jugadoresBD.isEmpty()) {
             GestorDatos.asignarEquipoInicial(usuario);
+            GestorDatos.guardarPlantillas();
             new VentanaEquipoInicial(usuario).setVisible(true);
+        } else {
+            usuario.setJugadoresParaLiga(liga.getId(), jugadoresBD);
         }
 
         GestorDatos.guardarUsuarios();
         abrirPrincipal();
     }
+
 
     private void crearLigaPrivada() {
 
@@ -115,11 +123,12 @@ public class VentanaSeleccionLiga extends JFrame {
         form.add(new JLabel("Código de invitación (opcional):"));
         form.add(codigo);
 
-        int ok = JOptionPane.showConfirmDialog(this, form, "Crear liga privada",
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        int ok = JOptionPane.showConfirmDialog(
+                this, form, "Crear liga privada",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE
+        );
 
-        if (ok != JOptionPane.OK_OPTION)
-            return;
+        if (ok != JOptionPane.OK_OPTION) return;
 
         String nom = nombre.getText().trim();
         String cod = codigo.getText().trim();
@@ -129,86 +138,71 @@ public class VentanaSeleccionLiga extends JFrame {
             return;
         }
 
-        boolean existe = GestorDatos.ligas.values().stream()
-                .anyMatch(l -> !l.isPublica() &&
-                        l.getNombre().equalsIgnoreCase(nom) &&
-                        Objects.equals(l.getCodigoInvitacion(), cod.isEmpty() ? null : cod));
+        Liga liga = GestorDatos.registrarLiga(
+                nom, false, cod.isEmpty() ? null : cod
+        );
 
-        if (existe) {
-            JOptionPane.showMessageDialog(this,
-                    "Ya existe una liga privada con ese nombre y código.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        Liga liga = GestorDatos.registrarLiga(nom, false, cod.isEmpty() ? null : cod);
+        if (liga == null) return;
 
         GestorDatos.agregarUsuarioALiga(usuario.getId(), liga.getId());
         usuario.setLigaActualId(liga.getId());
 
-        if (usuario.getJugadores() == null || usuario.getJugadores().isEmpty()) {
+        List<Integer> jugadoresBD =
+                GestorDatos.cargarJugadoresUsuarioLiga(usuario.getId(), liga.getId());
+
+        if (jugadoresBD.isEmpty()) {
             GestorDatos.asignarEquipoInicial(usuario);
+            GestorDatos.guardarPlantillas();
             new VentanaEquipoInicial(usuario).setVisible(true);
+        } else {
+            usuario.setJugadoresParaLiga(liga.getId(), jugadoresBD);
         }
 
         GestorDatos.guardarUsuarios();
         abrirPrincipal();
     }
 
+
     private void unirseConCodigo() {
-        String codigoInput = JOptionPane.showInputDialog(this,
-                "Introduce el código de invitación:");
+        String codigoInput = JOptionPane.showInputDialog(
+                this, "Introduce el código de invitación:"
+        );
 
         if (codigoInput == null || codigoInput.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Código inválido.");
             return;
         }
 
-        final String codigo = codigoInput.trim();
+        String codigo = codigoInput.trim();
 
         Liga liga = GestorDatos.ligas.values().stream()
                 .filter(l -> !l.isPublica() && codigo.equals(l.getCodigoInvitacion()))
-                .findFirst().orElse(null);
+                .findFirst()
+                .orElse(null);
 
         if (liga == null) {
-            int crear = JOptionPane.showConfirmDialog(this,
-                    "No existe ninguna liga con ese código.\n¿Crear una nueva?",
-                    "Liga no encontrada",
-                    JOptionPane.YES_NO_OPTION);
-
-            if (crear != JOptionPane.YES_OPTION)
-                return;
-
-            String nombre = JOptionPane.showInputDialog(this, "Nombre de la nueva liga:");
-            if (nombre == null || nombre.trim().isEmpty())
-                return;
-
-            Liga nueva = GestorDatos.registrarLiga(nombre.trim(), false, codigo);
-            GestorDatos.agregarUsuarioALiga(usuario.getId(), nueva.getId());
-            usuario.setLigaActualId(nueva.getId());
-
-            if (usuario.getJugadores() == null || usuario.getJugadores().isEmpty()) {
-                GestorDatos.asignarEquipoInicial(usuario);
-                new VentanaEquipoInicial(usuario).setVisible(true);
-            }
-
-            GestorDatos.guardarUsuarios();
-            abrirPrincipal();
+            JOptionPane.showMessageDialog(this, "No existe ninguna liga con ese código.");
             return;
         }
 
         GestorDatos.agregarUsuarioALiga(usuario.getId(), liga.getId());
         usuario.setLigaActualId(liga.getId());
 
-        if (usuario.getJugadores() == null || usuario.getJugadores().isEmpty()) {
+        List<Integer> jugadoresBD =
+                GestorDatos.cargarJugadoresUsuarioLiga(usuario.getId(), liga.getId());
+
+        if (jugadoresBD.isEmpty()) {
             GestorDatos.asignarEquipoInicial(usuario);
+            GestorDatos.guardarPlantillas();
             new VentanaEquipoInicial(usuario).setVisible(true);
+        } else {
+            usuario.setJugadoresParaLiga(liga.getId(), jugadoresBD);
         }
 
         GestorDatos.guardarUsuarios();
         abrirPrincipal();
     }
+
 
     private void abrirPrincipal() {
         dispose();
