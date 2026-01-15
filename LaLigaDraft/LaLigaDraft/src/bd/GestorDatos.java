@@ -692,6 +692,9 @@ public class GestorDatos {
     public static void inicializar() {
         crearTablas();
         cargarTodo();
+        if (jugadores.isEmpty()) {
+            crearJugadoresPrueba();
+        }
     }
 
     // -------------------- MERCADO --------------------
@@ -725,6 +728,31 @@ public class GestorDatos {
                 }
             }
         }
+    }
+
+    //RECURSIVIDAD: Suma el valor de mercado de todos los jugadores de forma recursiva
+    public static int calcularValorTotalRecursivo(List<gui.clases.Jugador> lista, int indice) {
+        // Caso base: si llegamos al final de la lista, devolvemos 0
+        if (indice == lista.size()) {
+            return 0;
+        }
+        // Paso recursivo: valor del jugador actual + valor de los que quedan
+        return lista.get(indice).getValorMercado() + calcularValorTotalRecursivo(lista, indice + 1);
+    }
+    
+    private static void crearJugadoresPrueba() {
+        System.out.println("Creando jugadores de prueba para la base de datos...");
+        // Creamos 3 jugadores (ID, Nombre, Equipo, Edad, Nacionalidad, Camiseta, Valor, Estado, Posicion)
+        Jugador j1 = new Jugador(1, "Lamine Yamal", "FC Barcelona", 17, "Española", 19, 150000000, gui.enums.Estado.SANO, gui.enums.Posicion.DEL);
+        Jugador j2 = new Jugador(2, "Vinícius Jr", "Real Madrid", 24, "Brasileña", 7, 200000000, gui.enums.Estado.SANO, gui.enums.Posicion.DEL);
+        Jugador j3 = new Jugador(3, "Nico Williams", "Athletic", 22, "Española", 11, 70000000, gui.enums.Estado.SANO, gui.enums.Posicion.DEL);
+        
+        jugadores.put(j1.getId(), j1);
+        jugadores.put(j2.getId(), j2);
+        jugadores.put(j3.getId(), j3);
+        
+        // Los guardamos físicamente en el .db
+        guardarJugadores(); 
     }
 
 }
