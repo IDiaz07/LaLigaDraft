@@ -50,7 +50,7 @@ public class PanelPrensa extends JPanel {
         add(scroll, BorderLayout.CENTER);
 
         // --- BOTÓN ACTUALIZAR ---
-        JButton btnUpdate = new JButton("🔄 LEER NUEVOS RUMORES");
+        JButton btnUpdate = new JButton("LEER NUEVOS RUMORES");
         btnUpdate.setFont(new Font("Segoe UI", Font.BOLD, 16));
         btnUpdate.setBackground(new Color(230, 126, 34)); // Naranja prensa
         btnUpdate.setForeground(Color.WHITE);
