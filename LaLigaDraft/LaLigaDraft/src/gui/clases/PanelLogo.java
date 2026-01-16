@@ -2,95 +2,111 @@ package gui.clases;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.geom.*;
+import java.awt.geom.Path2D;
+import java.awt.geom.Point2D;
 
 /**
- * COMPONENTE DE LOGOTIPO VECTORIAL
- * Esta clase dibuja programáticamente el escudo y título de la aplicación
- * utilizando la API Graphics2D de Java.
- * No requiere archivos de imagen externos, asegurando portabilidad y calidad.
+ * COMPONENTE DE IDENTIDAD CORPORATIVA
+ * Renderiza el logotipo oficial de la aplicación utilizando gráficos vectoriales 2D.
+ * Incluye escudo, tipografía personalizada y efectos de iluminación (gradientes).
  */
 public class PanelLogo extends JPanel {
 
     public PanelLogo() {
-        // Tamaño preferido para que se vea bien en las ventanas
-        setPreferredSize(new Dimension(400, 160));
-        setBackground(new Color(18, 18, 18)); // Mismo fondo que la app
-        setOpaque(false); // Para que se integre con el fondo de la ventana padre
+        setPreferredSize(new Dimension(400, 150)); // Tamaño ideal para cabeceras
+        setBackground(new Color(18, 18, 18)); // Fondo transparente/oscuro
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        // Convertimos a Graphics2D para tener mejores herramientas de dibujo
+        
         Graphics2D g2 = (Graphics2D) g;
+        // ACTIVAR ANTIALIASING 
         
-        // Activamos el "Antialiasing" para que los bordes se vean suaves (HD)
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-        int width = getWidth();
-        int centerX = width / 2;
-        int startY = 20;
+        int ancho = getWidth();
+        int alto = getHeight();
+        int centroX = ancho / 2;
 
-        // --- 1. DIBUJAR EL ESCUDO ---
-        int shieldW = 80;
-        int shieldH = 100;
-        int shieldX = centerX - shieldW / 2;
+        // --- 1. EL ESCUDO (SHIELD) ---
+        int tamEscudo = 60;
+        int yEscudo = 10;
+        
+        Path2D escudo = new Path2D.Double();
+        escudo.moveTo(centroX - tamEscudo, yEscudo); // Arriba Izq
+        escudo.lineTo(centroX + tamEscudo, yEscudo); // Arriba Der
+        escudo.lineTo(centroX + tamEscudo, yEscudo + 40); // Bajada recta
+        escudo.curveTo(centroX + tamEscudo, yEscudo + 90, 
+                       centroX - tamEscudo, yEscudo + 90, 
+                       centroX, yEscudo + 110); // Punta de abajo
+        escudo.lineTo(centroX - tamEscudo, yEscudo + 40); // Vuelta arriba
+        escudo.closePath();
 
-        // Creamos la forma del escudo con curvas
-        Path2D shield = new Path2D.Double();
-        shield.moveTo(shieldX, startY);
-        shield.lineTo(shieldX + shieldW, startY); // Parte superior recta
-        shield.lineTo(shieldX + shieldW, startY + shieldH * 0.6); // Lateral derecho
-        // Curva inferior hasta la punta
-        shield.quadTo(centerX, startY + shieldH * 1.3, shieldX, startY + shieldH * 0.6);
-        shield.closePath();
-
-        // Relleno con degradado azul
+        // Gradiente Premium (Azul Oscuro a Azul Claro)
         GradientPaint gradiente = new GradientPaint(
-                centerX, startY, new Color(52, 152, 219), // Azul claro arriba
-                centerX, startY + shieldH, new Color(41, 128, 185)); // Azul oscuro abajo
+                centroX, yEscudo, new Color(41, 128, 185), 
+                centroX, yEscudo + 100, new Color(22, 160, 133));
+        
         g2.setPaint(gradiente);
-        g2.fill(shield);
+        g2.fill(escudo);
 
-        // Borde blanco del escudo
-        g2.setColor(Color.WHITE);
-        g2.setStroke(new BasicStroke(3)); // Grosor del borde
-        g2.draw(shield);
+        // Borde Dorado
+        g2.setColor(new Color(241, 196, 15));
+        g2.setStroke(new BasicStroke(3));
+        g2.draw(escudo);
 
-        // --- 2. DIBUJAR ICONO DE BALÓN DENTRO ---
-        int ballSize = 40;
-        int ballX = centerX - ballSize / 2;
-        int ballY = startY + 25;
+        // --- 2. LA ESTRELLA (DENTRO DEL ESCUDO) ---
+        drawStar(g2, centroX, yEscudo + 45, 20, 10);
+
+        // --- 3. EL TEXTO (TIPOGRAFÍA) ---
+        Font fuenteTitulo = new Font("Segoe UI", Font.BOLD, 32);
+        Font fuenteSub = new Font("Segoe UI", Font.PLAIN, 12);
         
+        String textoPrincipal = "LALIGA DRAFT";
+        String textoSecundario = "MANAGER 2025";
+
+        FontMetrics fm = g.getFontMetrics(fuenteTitulo);
+        int xTexto = centroX - (fm.stringWidth(textoPrincipal) / 2);
+        int yTexto = yEscudo + 150; // Debajo del escudo
+
+        // Sombra del texto (Efecto 3D simple)
+        g2.setColor(new Color(0, 0, 0, 150));
+        g2.setFont(fuenteTitulo);
+        g2.drawString(textoPrincipal, xTexto + 2, yTexto + 2);
+
+        // Texto Principal Blanco
         g2.setColor(Color.WHITE);
-        g2.fillOval(ballX, ballY, ballSize, ballSize); // Fondo blanco balón
-        g2.setColor(Color.BLACK);
-        g2.setStroke(new BasicStroke(2));
-        g2.drawOval(ballX, ballY, ballSize, ballSize); // Borde negro balón
+        g2.drawString(textoPrincipal, xTexto, yTexto);
+
+        // Texto Secundario Dorado
+        g2.setFont(fuenteSub);
+        fm = g.getFontMetrics(fuenteSub);
+        int xSub = centroX - (fm.stringWidth(textoSecundario) / 2);
+        g2.setColor(new Color(241, 196, 15));
+        g2.drawString(textoSecundario, xSub, yTexto + 20);
+    }
+    
+
+    // Método matemático para dibujar una estrella perfecta
+    private void drawStar(Graphics2D g, int x, int y, int outerRadius, int innerRadius) {
+        Path2D star = new Path2D.Double();
+        double angle = Math.PI / 2; // Empezar arriba
+        double angleStep = Math.PI / 5; // 5 puntas
+
+        star.moveTo(x + Math.cos(angle) * outerRadius, y - Math.sin(angle) * outerRadius); // Arriba es negativo en Y
+
+        for (int i = 0; i < 5; i++) {
+            angle += angleStep;
+            star.lineTo(x + Math.cos(angle) * innerRadius, y - Math.sin(angle) * innerRadius);
+            angle += angleStep;
+            star.lineTo(x + Math.cos(angle) * outerRadius, y - Math.sin(angle) * outerRadius);
+        }
+        star.closePath();
         
-        // Dibujo simple de hexágonos internos
-        g2.drawLine(centerX - 5, ballY + 10, centerX + 5, ballY + 10);
-        g2.drawLine(centerX - 5, ballY + 10, centerX - 12, ballY + 22);
-        g2.drawLine(centerX + 5, ballY + 10, centerX + 12, ballY + 22);
-        g2.drawLine(centerX - 12, ballY + 22, centerX, ballY + 32);
-        g2.drawLine(centerX + 12, ballY + 22, centerX, ballY + 32);
-
-        // --- 3. DIBUJAR EL TEXTO (TÍTULO) ---
-        g2.setColor(Color.WHITE);
-        g2.setFont(new Font("Segoe UI", Font.BOLD, 32));
-        String titulo = "LALIGA DRAFT";
-        // Calculamos el ancho del texto para centrarlo perfectamente
-        FontMetrics fm = g2.getFontMetrics();
-        int textX = centerX - fm.stringWidth(titulo) / 2;
-        g2.drawString(titulo, textX, startY + shieldH + 35);
-
-        // --- 4. DIBUJAR EL SUBTÍTULO ---
-        g2.setFont(new Font("Segoe UI", Font.ITALIC, 16));
-        g2.setColor(new Color(189, 195, 199)); // Gris claro
-        String subtitulo = "Fantasy Manager Edition 2025";
-        fm = g2.getFontMetrics();
-        textX = centerX - fm.stringWidth(subtitulo) / 2;
-        g2.drawString(subtitulo, textX, startY + shieldH + 60);
+        g.setColor(Color.WHITE);
+        g.fill(star);
     }
 }

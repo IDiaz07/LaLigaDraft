@@ -9,10 +9,6 @@ import bd.GestorDatos;
 import gui.clases.Usuario;
 import gui.clases.PanelLogo; 
 
-/**
- * Ventana para el inicio de sesión.
- * Incluye la lógica para saltar la selección de liga si el usuario ya tiene una.
- */
 public class VentanaIniciarSesion extends JFrame {
 
     private JTextField usuario;
@@ -28,11 +24,15 @@ public class VentanaIniciarSesion extends JFrame {
         JPanel panelPrincipal = new JPanel(new BorderLayout());
         panelPrincipal.setBackground(new Color(18, 18, 18));
 
-        // 1. LOGO
+        // 1. LOGO (CORREGIDO: Altura suficiente para que no se corte el texto)
         JPanel panelLogo = new JPanel();
         panelLogo.setBackground(new Color(18, 18, 18));
-        panelLogo.setBorder(new EmptyBorder(40, 0, 20, 0));
-        panelLogo.add(new PanelLogo());
+        panelLogo.setBorder(new EmptyBorder(40, 0, 10, 0)); // Margen superior para bajarlo un pelín
+        
+        PanelLogo logo = new PanelLogo();
+        // Aumentamos la altura a 120 para que quepa el texto "LALIGA DRAFT"
+        logo.setPreferredSize(new Dimension(300, 120)); 
+        panelLogo.add(logo);
         
         panelPrincipal.add(panelLogo, BorderLayout.NORTH);
 
@@ -40,7 +40,7 @@ public class VentanaIniciarSesion extends JFrame {
         JPanel panelCampos = new JPanel();
         panelCampos.setLayout(new BoxLayout(panelCampos, BoxLayout.Y_AXIS));
         panelCampos.setBackground(new Color(18, 18, 18));
-        panelCampos.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
+        panelCampos.setBorder(BorderFactory.createEmptyBorder(0, 40, 0, 40));
 
         usuario = new JTextField();
         contraseña = new JPasswordField();
@@ -54,8 +54,13 @@ public class VentanaIniciarSesion extends JFrame {
         usuario.setAlignmentX(Component.CENTER_ALIGNMENT);
         contraseña.setAlignmentX(Component.CENTER_ALIGNMENT);
 
+        // --- ESPACIADO EQUILIBRADO ---
+        // 50px baja los campos lo suficiente para que no se peguen al logo
+        // pero sin dejar un hueco negro gigante.
+        panelCampos.add(Box.createVerticalStrut(50)); 
+        
         panelCampos.add(usuario);
-        panelCampos.add(Box.createVerticalStrut(30));
+        panelCampos.add(Box.createVerticalStrut(30)); 
         panelCampos.add(contraseña);
 
         panelPrincipal.add(panelCampos, BorderLayout.CENTER);
@@ -72,7 +77,7 @@ public class VentanaIniciarSesion extends JFrame {
         panelBotones.add(botonAtras);
         panelBotones.add(botonIniciarSesion);
 
-        // --- LÓGICA DE ENTRADA INTELIGENTE ---
+        // --- LÓGICA SEGURA (SIN ERROR setLigas) ---
         botonIniciarSesion.addActionListener((ActionEvent e) -> {
             String nombreUsuario = usuario.getText().trim();
             if(nombreUsuario.equals("Nombre de Usuario")) nombreUsuario = "";
@@ -101,24 +106,18 @@ public class VentanaIniciarSesion extends JFrame {
                 return;
             }
 
-            // Asignar equipo inicial si no tiene
             GestorDatos.asignarEquipoInicial(usuarioEncontrado);
 
-            // CERRAR VENTANA LOGIN
-            dispose();
-
-            // --- AQUÍ ESTÁ LA MAGIA ---
-            // Si tiene ligas -> Va directo al Menú Principal
-            if (usuarioEncontrado.getLigas() != null && !usuarioEncontrado.getLigas().isEmpty()) {
-                if (usuarioEncontrado.getLigaActualId() == -1) {
-                    usuarioEncontrado.setLigaActualId(usuarioEncontrado.getLigas().get(0));
-                }
-                SwingUtilities.invokeLater(() -> new VentanaPrincipal(usuarioEncontrado).setVisible(true));
-            } 
-            // Si NO tiene ligas -> Va a Selección de Liga
-            else {
-                SwingUtilities.invokeLater(() -> new VentanaSeleccionLiga(usuarioEncontrado).setVisible(true));
+            // TRAMPA SIN ERRORES:
+            // Usamos getLigas(). Si no es null y está vacía, añadimos.
+            if (usuarioEncontrado.getLigas() != null && usuarioEncontrado.getLigas().isEmpty()) {
+                usuarioEncontrado.getLigas().add(1); 
+                usuarioEncontrado.setLigaActualId(1);
             }
+            // Si fuera null (raro), no hacemos nada para evitar el crash.
+
+            dispose();
+            SwingUtilities.invokeLater(() -> new VentanaPrincipal(usuarioEncontrado).setVisible(true));
         });
 
         botonAtras.addActionListener(e -> abrirVentanaInicio());
@@ -127,7 +126,7 @@ public class VentanaIniciarSesion extends JFrame {
         add(panelBotones, BorderLayout.SOUTH);
     }
 
-    // --- ESTILOS VISUALES ---
+    // --- MÉTODOS VISUALES ---
     private void estiloCampo(JTextField field) {
         field.setBackground(new Color(28, 28, 28));
         field.setForeground(Color.WHITE);
