@@ -220,67 +220,82 @@ public class VentanaPrincipal extends JFrame {
     private void inicializarBarraMenuSuperior() {
         JMenuBar menuBar = new JMenuBar();
         menuBar.setBackground(new Color(30, 30, 30));
-        // Línea sutil separadora
         menuBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(50, 50, 50)));
 
-        // 1. MENÚ GESTIÓN (Técnico)
-        JMenu menuGestion = new JMenu(" Herramientas de Gestión ");
+        // --- 1. MENÚ GESTIÓN (Técnico) ---
+        JMenu menuGestion = new JMenu(" Herramientas de Gestion ");
         menuGestion.setForeground(Color.WHITE);
         menuGestion.setFont(new Font("Segoe UI", Font.BOLD, 12));
 
-        // Informe de sistema (Simulación técnica)
         JMenuItem itemInforme = new JMenuItem("  Generar Informe de Rendimiento  ");
         itemInforme.setBackground(new Color(45, 45, 45));
         itemInforme.setForeground(Color.CYAN); 
         
         itemInforme.addActionListener(e -> {
-            // Calculo memoria RAM usada para el reporte
             long memoriaTotal = Runtime.getRuntime().totalMemory() / (1024 * 1024);
             long memoriaLibre = Runtime.getRuntime().freeMemory() / (1024 * 1024);
             long memoriaUsada = memoriaTotal - memoriaLibre;
             
-            String reporte = "=== REPORTE TÉCNICO ===\n" +
+            String reporte = "=== REPORTE TECNICO ===\n" +
                              "Memoria Usada: " + memoriaUsada + " MB\n" +
                              "Hilos Activos: " + Thread.activeCount() + "\n" +
-                             "Conexión BD: ESTABLE";
+                             "Conexion BD: ESTABLE";
             
             JOptionPane.showMessageDialog(this, reporte, "Estado del Sistema", JOptionPane.INFORMATION_MESSAGE);
         });
         
         menuGestion.add(itemInforme);
 
-        // 2. MENÚ CONFIGURACIÓN (Aquí está el acceso al PanelAjustes)
-        JMenu menuConfig = new JMenu(" Configuración ");
+        // --- 2. MENÚ AGENDA (NUEVO Y VISIBLE EN LA BARRA) ---
+        // Lo creamos como un menú principal propio
+        JMenu menuAgenda = new JMenu(" Agenda / Calendario ");
+        menuAgenda.setForeground(Color.WHITE); // Color destacado para que llame la atención
+        menuAgenda.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        
+        // Elemento dentro del menú
+        JMenuItem itemAbrirAgenda = new JMenuItem("  Ver Planificacion Mensual  ");
+        itemAbrirAgenda.setBackground(new Color(45, 45, 45));
+        itemAbrirAgenda.setForeground(Color.WHITE);
+        
+        itemAbrirAgenda.addActionListener(e -> {
+            // Abrimos la ventana del calendario
+            SwingUtilities.invokeLater(() -> new VentanaCalendario().setVisible(true));
+        });
+        
+        menuAgenda.add(itemAbrirAgenda);
+
+        // --- 3. MENÚ CONFIGURACIÓN ---
+        JMenu menuConfig = new JMenu(" Configuracion ");
         menuConfig.setForeground(Color.WHITE);
         menuConfig.setFont(new Font("Segoe UI", Font.BOLD, 12));
         
-        JMenuItem itemPrefs = new JMenuItem("  ⚙ Preferencias y Ajustes  ");
+        JMenuItem itemPrefs = new JMenuItem("  Preferencias y Ajustes  ");
         itemPrefs.setBackground(new Color(45, 45, 45));
         itemPrefs.setForeground(Color.WHITE);
         
-        // ACCIÓN CLAVE: Cambiar la vista al panel de ajustes
         itemPrefs.addActionListener(e -> {
             cardLayout.show(panelContenido, "Ajustes");
         });
         
         menuConfig.add(itemPrefs);
 
-        // 3. MENÚ AYUDA
+        // --- 4. MENÚ AYUDA ---
         JMenu menuAyuda = new JMenu(" Ayuda ");
         menuAyuda.setForeground(Color.WHITE);
         menuAyuda.setFont(new Font("Segoe UI", Font.BOLD, 12));
 
-        JMenuItem itemAcerca = new JMenuItem("  Créditos  ");
+        JMenuItem itemAcerca = new JMenuItem("  Creditos  ");
         itemAcerca.setBackground(new Color(45, 45, 45));
         itemAcerca.setForeground(Color.WHITE);
         itemAcerca.addActionListener(e -> {
-             JOptionPane.showMessageDialog(this, "Proyecto LALIGADRAFT\nCreado por Declan", "Créditos", JOptionPane.INFORMATION_MESSAGE);
+             JOptionPane.showMessageDialog(this, "Proyecto LALIGADRAFT\nCreado por Declan", "Creditos", JOptionPane.INFORMATION_MESSAGE);
         });
 
         menuAyuda.add(itemAcerca);
 
-        // Añado los menús a la barra
+        // AÑADIR TODOS A LA BARRA EN ORDEN
         menuBar.add(menuGestion);
+        menuBar.add(menuAgenda); // <--- Aquí aparece en medio
         menuBar.add(menuConfig);
         menuBar.add(menuAyuda);
 
