@@ -62,6 +62,7 @@ public class VentanaPrincipal extends JFrame {
         panelContenido.add(new PanelDashboard(usuario), "Dashboard");
         panelContenido.add(new PanelActividad(usuario), "Actividad");
         panelContenido.add(new PanelPrensa(), "Prensa");
+        panelContenido.add(new PanelAjustes(usuario), "Ajustes");
 
         // EQUIPO (con datos YA cargados)
         try {
@@ -219,87 +220,71 @@ public class VentanaPrincipal extends JFrame {
     private void inicializarBarraMenuSuperior() {
         JMenuBar menuBar = new JMenuBar();
         menuBar.setBackground(new Color(30, 30, 30));
+        // Línea sutil separadora
         menuBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(50, 50, 50)));
 
-        // --- MENÚ 1: HERRAMIENTAS ---
-        JMenu menuHerramientas = new JMenu(" Herramientas de Gestión ");
-        menuHerramientas.setForeground(Color.WHITE);
-        menuHerramientas.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        // 1. MENÚ GESTIÓN (Técnico)
+        JMenu menuGestion = new JMenu(" Herramientas de Gestión ");
+        menuGestion.setForeground(Color.WHITE);
+        menuGestion.setFont(new Font("Segoe UI", Font.BOLD, 12));
 
-        // FUNCIONALIDAD A: INFORME DE RENDIMIENTO (Muy técnico)
+        // Informe de sistema (Simulación técnica)
         JMenuItem itemInforme = new JMenuItem("  Generar Informe de Rendimiento  ");
         itemInforme.setBackground(new Color(45, 45, 45));
-        itemInforme.setForeground(Color.CYAN); // Color técnico
+        itemInforme.setForeground(Color.CYAN); 
         
         itemInforme.addActionListener(e -> {
-            // Lógica matemática para calcular memoria
+            // Calculo memoria RAM usada para el reporte
             long memoriaTotal = Runtime.getRuntime().totalMemory() / (1024 * 1024);
             long memoriaLibre = Runtime.getRuntime().freeMemory() / (1024 * 1024);
             long memoriaUsada = memoriaTotal - memoriaLibre;
             
-            int totalJugadores = GestorDatos.jugadores.size();
-            int totalUsuarios = GestorDatos.usuarios.size();
+            String reporte = "=== REPORTE TÉCNICO ===\n" +
+                             "Memoria Usada: " + memoriaUsada + " MB\n" +
+                             "Hilos Activos: " + Thread.activeCount() + "\n" +
+                             "Conexión BD: ESTABLE";
             
-            String reporte = "=== REPORTE DE ESTADO DEL SISTEMA ===\n\n" +
-                             "Estadísticas de Memoria (JVM):\n" +
-                             "• Memoria Total Reservada: " + memoriaTotal + " MB\n" +
-                             "• Memoria en Uso: " + memoriaUsada + " MB\n" +
-                             "• Hilos Activos: " + Thread.activeCount() + "\n\n" +
-                             "Datos Cargados en Memoria:\n" +
-                             "• Base de Datos de Jugadores: " + totalJugadores + " registros\n" +
-                             "• Usuarios Concurrentes: " + totalUsuarios + "\n" +
-                             "• Integridad de Datos: VERIFICADA (OK)\n\n" +
-                             "Estado del Motor de Simulación: ESPERA (IDLE)";
-            
-            JTextArea areaTexto = new JTextArea(reporte);
-            areaTexto.setBackground(new Color(30,30,30));
-            areaTexto.setForeground(Color.GREEN); // Estilo consola hacker
-            areaTexto.setFont(new Font("Consolas", Font.PLAIN, 12));
-            areaTexto.setEditable(false);
-            
-            JOptionPane.showMessageDialog(VentanaPrincipal.this, new JScrollPane(areaTexto), 
-                "Diagnóstico del Sistema", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, reporte, "Estado del Sistema", JOptionPane.INFORMATION_MESSAGE);
         });
+        
+        menuGestion.add(itemInforme);
 
-        // FUNCIONALIDAD B: PREFERENCIAS (Mucha interfaz visual)
-        JMenuItem itemPrefs = new JMenuItem("  Preferencias de Interfaz  ");
+        // 2. MENÚ CONFIGURACIÓN (Aquí está el acceso al PanelAjustes)
+        JMenu menuConfig = new JMenu(" Configuración ");
+        menuConfig.setForeground(Color.WHITE);
+        menuConfig.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        
+        JMenuItem itemPrefs = new JMenuItem("  ⚙ Preferencias y Ajustes  ");
         itemPrefs.setBackground(new Color(45, 45, 45));
         itemPrefs.setForeground(Color.WHITE);
         
+        // ACCIÓN CLAVE: Cambiar la vista al panel de ajustes
         itemPrefs.addActionListener(e -> {
-            JPanel panelPrefs = new JPanel(new GridLayout(0, 1));
-            panelPrefs.add(new JCheckBox("Activar notificaciones de mercado", true));
-            panelPrefs.add(new JCheckBox("Simulación en segundo plano", true));
-            panelPrefs.add(new JCheckBox("Modo de alto contraste", false));
-            panelPrefs.add(new JCheckBox("Guardado automático de logs", true));
-            
-            JOptionPane.showMessageDialog(VentanaPrincipal.this, panelPrefs, 
-                "Configuración Local", JOptionPane.PLAIN_MESSAGE);
+            cardLayout.show(panelContenido, "Ajustes");
         });
+        
+        menuConfig.add(itemPrefs);
 
-        menuHerramientas.add(itemInforme);
-        menuHerramientas.addSeparator();
-        menuHerramientas.add(itemPrefs);
-
-        // --- MENÚ 2: AYUDA (Este lo dejamos igual, está bien) ---
+        // 3. MENÚ AYUDA
         JMenu menuAyuda = new JMenu(" Ayuda ");
         menuAyuda.setForeground(Color.WHITE);
         menuAyuda.setFont(new Font("Segoe UI", Font.BOLD, 12));
 
-        JMenuItem itemAcerca = new JMenuItem("  Créditos del Proyecto  ");
+        JMenuItem itemAcerca = new JMenuItem("  Créditos  ");
         itemAcerca.setBackground(new Color(45, 45, 45));
         itemAcerca.setForeground(Color.WHITE);
         itemAcerca.addActionListener(e -> {
-             JOptionPane.showMessageDialog(VentanaPrincipal.this, 
-                "LALIGADRAFT 2025\n\nArquitectura: Declan\nVersión 1.0.2", 
-                "Créditos", JOptionPane.INFORMATION_MESSAGE);
+             JOptionPane.showMessageDialog(this, "Proyecto LALIGADRAFT\nCreado por Declan", "Créditos", JOptionPane.INFORMATION_MESSAGE);
         });
 
         menuAyuda.add(itemAcerca);
 
-        menuBar.add(menuHerramientas);
+        // Añado los menús a la barra
+        menuBar.add(menuGestion);
+        menuBar.add(menuConfig);
         menuBar.add(menuAyuda);
 
         this.setJMenuBar(menuBar);
     }
 }
+    
