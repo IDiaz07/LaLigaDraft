@@ -7,11 +7,11 @@ import javax.swing.border.EmptyBorder;
 
 import bd.GestorDatos;
 import gui.clases.Usuario;
-import gui.clases.PanelLogo; // Importamos tu nuevo logo
+import gui.clases.PanelLogo; 
 
 /**
  * Ventana para el inicio de sesión.
- * Diseño visual mejorado + Lógica original intacta.
+ * Incluye la lógica para saltar la selección de liga si el usuario ya tiene una.
  */
 public class VentanaIniciarSesion extends JFrame {
 
@@ -20,7 +20,6 @@ public class VentanaIniciarSesion extends JFrame {
 
     public VentanaIniciarSesion() {
         setTitle("Inicio de Sesion");
-        // Ajustamos tamaño para que sea igual que la ventana de Registro
         setSize(450, 750); 
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -29,8 +28,7 @@ public class VentanaIniciarSesion extends JFrame {
         JPanel panelPrincipal = new JPanel(new BorderLayout());
         panelPrincipal.setBackground(new Color(18, 18, 18));
 
-        // 1. LOGO (Sustituye al JLabel de texto)
-        // Lo metemos en un panel contenedor para darle margen superior
+        // 1. LOGO
         JPanel panelLogo = new JPanel();
         panelLogo.setBackground(new Color(18, 18, 18));
         panelLogo.setBorder(new EmptyBorder(40, 0, 20, 0));
@@ -42,17 +40,14 @@ public class VentanaIniciarSesion extends JFrame {
         JPanel panelCampos = new JPanel();
         panelCampos.setLayout(new BoxLayout(panelCampos, BoxLayout.Y_AXIS));
         panelCampos.setBackground(new Color(18, 18, 18));
-        // Ajustamos márgenes para centrar visualmente
         panelCampos.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
 
         usuario = new JTextField();
         contraseña = new JPasswordField();
 
-        // Estilizado moderno
         estiloCampo(usuario);
         estiloCampo(contraseña);
 
-        // Tus placeholders originales
         addPlaceholder(usuario, "Nombre de Usuario");
         addPlaceholder(contraseña, "Contraseña");
 
@@ -60,28 +55,26 @@ public class VentanaIniciarSesion extends JFrame {
         contraseña.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         panelCampos.add(usuario);
-        panelCampos.add(Box.createVerticalStrut(30)); // Más espacio entre campos
+        panelCampos.add(Box.createVerticalStrut(30));
         panelCampos.add(contraseña);
 
         panelPrincipal.add(panelCampos, BorderLayout.CENTER);
 
         // 3. BOTONES
         JPanel panelBotones = new JPanel(new GridLayout(1, 2, 20, 0));
-        // Márgenes ajustados para que quede pegado abajo pero con aire
         panelBotones.setBorder(BorderFactory.createEmptyBorder(20, 40, 60, 40)); 
         panelBotones.setBackground(new Color(18, 18, 18));
-        panelBotones.setPreferredSize(new Dimension(450, 130)); // Altura fija zona inferior
+        panelBotones.setPreferredSize(new Dimension(450, 130));
 
-        JButton botonAtras = crearBoton("Atrás", new Color(90, 90, 90)); // Gris
-        JButton botonIniciarSesion = crearBoton("Entrar", new Color(52, 152, 219)); // Azul
+        JButton botonAtras = crearBoton("Atrás", new Color(90, 90, 90));
+        JButton botonIniciarSesion = crearBoton("Entrar", new Color(52, 152, 219));
 
         panelBotones.add(botonAtras);
         panelBotones.add(botonIniciarSesion);
 
-        // --- LÓGICA ORIGINAL EXACTA ---
+        // --- LÓGICA DE ENTRADA INTELIGENTE ---
         botonIniciarSesion.addActionListener((ActionEvent e) -> {
             String nombreUsuario = usuario.getText().trim();
-            // Cuidado con el placeholder: si el texto es el placeholder, tratamos como vacío
             if(nombreUsuario.equals("Nombre de Usuario")) nombreUsuario = "";
             
             String pass = new String(contraseña.getPassword()).trim();
@@ -92,8 +85,7 @@ public class VentanaIniciarSesion extends JFrame {
                 return;
             }
 
-            // Tu búsqueda con Streams
-            String finalNombre = nombreUsuario; // Variable efectiva final para lambda
+            String finalNombre = nombreUsuario;
             Usuario usuarioEncontrado = GestorDatos.usuarios.values().stream()
                     .filter(u -> u.getNombre().equalsIgnoreCase(finalNombre))
                     .findFirst()
@@ -109,17 +101,22 @@ public class VentanaIniciarSesion extends JFrame {
                 return;
             }
 
-            // Lógica de navegación original
+            // Asignar equipo inicial si no tiene
             GestorDatos.asignarEquipoInicial(usuarioEncontrado);
 
+            // CERRAR VENTANA LOGIN
+            dispose();
+
+            // --- AQUÍ ESTÁ LA MAGIA ---
+            // Si tiene ligas -> Va directo al Menú Principal
             if (usuarioEncontrado.getLigas() != null && !usuarioEncontrado.getLigas().isEmpty()) {
                 if (usuarioEncontrado.getLigaActualId() == -1) {
                     usuarioEncontrado.setLigaActualId(usuarioEncontrado.getLigas().get(0));
                 }
-                dispose();
                 SwingUtilities.invokeLater(() -> new VentanaPrincipal(usuarioEncontrado).setVisible(true));
-            } else {
-                dispose();
+            } 
+            // Si NO tiene ligas -> Va a Selección de Liga
+            else {
                 SwingUtilities.invokeLater(() -> new VentanaSeleccionLiga(usuarioEncontrado).setVisible(true));
             }
         });
@@ -130,19 +127,17 @@ public class VentanaIniciarSesion extends JFrame {
         add(panelBotones, BorderLayout.SOUTH);
     }
 
-   
-    // --- ESTILOS VISUALES MEJORADOS ---
+    // --- ESTILOS VISUALES ---
     private void estiloCampo(JTextField field) {
         field.setBackground(new Color(28, 28, 28));
         field.setForeground(Color.WHITE);
         field.setCaretColor(Color.WHITE);
         field.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        // Borde sutil y padding interno
         field.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(60, 60, 60)),
             BorderFactory.createEmptyBorder(10, 15, 10, 15)
         ));
-        field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50)); // Altura fija cómoda
+        field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
     }
 
     private JButton crearBoton(String txt, Color bg) {
@@ -155,8 +150,6 @@ public class VentanaIniciarSesion extends JFrame {
         b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         return b;
     }
-
-    // --- TUS PLACEHOLDERS ORIGINALES (INTACTOS) ---
     
     public static void addPlaceholder(JTextField textField, String placeholder) {
         textField.setText(placeholder);
@@ -169,7 +162,6 @@ public class VentanaIniciarSesion extends JFrame {
                     textField.setForeground(Color.WHITE);
                 }
             }
-
             public void focusLost(FocusEvent e) {
                 if (textField.getText().isEmpty()) {
                     textField.setText(placeholder);
@@ -192,7 +184,6 @@ public class VentanaIniciarSesion extends JFrame {
                     passwordField.setEchoChar('•');
                 }
             }
-
             public void focusLost(FocusEvent e) {
                 if (new String(passwordField.getPassword()).isEmpty()) {
                     passwordField.setEchoChar((char) 0);
