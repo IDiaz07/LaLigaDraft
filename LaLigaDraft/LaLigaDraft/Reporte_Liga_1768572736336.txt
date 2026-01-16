@@ -1,0 +1,9 @@
+INFORME DE CLASIFICACIÓN - LALIGADRAFT
+Fecha: Fri Jan 16 15:12:16 CET 2026
+--------------------------------------
+POS   | USUARIO              | PUNTOS    
+------+----------------------+----------
+1     | ander2               | 51        
+2     | a                    | 118       
+3     | Declan               | 121       
+4     | ander                | 128       
