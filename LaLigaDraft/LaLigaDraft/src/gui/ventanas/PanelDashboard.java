@@ -23,6 +23,41 @@ public class PanelDashboard extends JPanel {
 
         add(crearTitulo(), BorderLayout.NORTH);
         add(crearResumen(), BorderLayout.CENTER);
+        
+     // =============================================================
+        // IMPLEMENTACIÓN DE MI MOTOR DE NOTICIAS 
+        // He añadido esta sección para dar dinamismo a la pantalla principal
+        // =============================================================
+        
+        // 1. Instancio mi clase generadora de noticias
+        gui.clases.MotorNoticias motorIA = new gui.clases.MotorNoticias();
+        
+        // 2. Genero el contenido aleatorio usando mis algoritmos
+        String titular = motorIA.generarNuevaNoticia();
+        String prediccion = motorIA.predecirResultadoProximoPartido();
+        
+        // 3. Diseño el panel inferior (News Ticker) para mostrarlo
+        JPanel panelNoticias = new JPanel(new BorderLayout());
+        panelNoticias.setBackground(new Color(25, 25, 25)); // Fondo oscuro para resaltar
+        // Le pongo un borde verde superior para separar
+        panelNoticias.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(2, 0, 0, 0, new Color(46, 204, 113)), 
+                BorderFactory.createEmptyBorder(10, 15, 10, 15)
+        ));
+        
+        JLabel lblIcono = new JLabel("ÚLTIMA HORA:  ");
+        lblIcono.setForeground(Color.ORANGE);
+        lblIcono.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        
+        JLabel lblTexto = new JLabel(titular + "   |   " + prediccion);
+        lblTexto.setForeground(Color.CYAN); // Cian para efecto tecnológico
+        lblTexto.setFont(new Font("Segoe UI", Font.ITALIC, 14));
+        
+        panelNoticias.add(lblIcono, BorderLayout.WEST);
+        panelNoticias.add(lblTexto, BorderLayout.CENTER);
+        
+        // 4. Lo añado al sur de mi dashboard
+        add(panelNoticias, BorderLayout.SOUTH);
     }
 
     // ---------------- TÍTULO ----------------

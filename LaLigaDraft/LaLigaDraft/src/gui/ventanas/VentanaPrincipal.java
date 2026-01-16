@@ -46,7 +46,7 @@ public class VentanaPrincipal extends JFrame {
         panelContenido.setBackground(new Color(18, 18, 18));
 
         // Panel placeholders
-        String[] secciones = { "Dashboard", "Equipo", "Clasificación", "Mercado", "Actividad" };
+        String[] secciones = { "Dashboard", "Equipo", "Clasificación", "Mercado", "Actividad", "Prensa" };
 
         for (String s : secciones) {
             if (!s.equals("Dashboard") &&
@@ -61,6 +61,7 @@ public class VentanaPrincipal extends JFrame {
         // DASHBOARD REAL
         panelContenido.add(new PanelDashboard(usuario), "Dashboard");
         panelContenido.add(new PanelActividad(usuario), "Actividad");
+        panelContenido.add(new PanelPrensa(), "Prensa");
 
         // EQUIPO (con datos YA cargados)
         try {
