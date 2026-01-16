@@ -155,6 +155,7 @@ public class PanelClasificacion extends JPanel {
         tableModel.setRowCount(0);
         List<Usuario> usuariosLiga = new ArrayList<>();
 
+        // 1. Recuperamos los usuarios
         for (Integer idUsuario : ligaActual.getUsuariosIds()) {
             Usuario u = GestorDatos.usuarios.get(idUsuario);
             if (u != null) {
@@ -162,21 +163,22 @@ public class PanelClasificacion extends JPanel {
             }
         }
         
-        // Ordenar (Si no podemos calcular puntos reales, usamos hashCode para orden estable pero "aleatorio")
-        usuariosLiga.sort((u1, u2) -> Integer.compare(u2.hashCode(), u1.hashCode()));
+        // 2. ORDENAMOS (FIX): Usamos el método común para comparar
+        // Ponemos (u2, u1) para que sea DESCENDENTE (Mayor a Menor)
+        usuariosLiga.sort((u1, u2) -> Integer.compare(calcularPuntosVisuales(u2), calcularPuntosVisuales(u1)));
 
+        // 3. MOSTRAMOS
         int pos = 1;
         for (Usuario u : usuariosLiga) {
-            // FAKE DATA: Para evitar el error de getJugadores(), generamos datos visuales
-            // Esto permite que el código compile y se vea "lleno"
-            int puntosFake = (Math.abs(u.hashCode()) % 100) + (obtenerJornadaActual() * 10);
-            int numJugadoresFake = 11; // Asumimos equipo completo para visualizar
+            // Usamos EL MISMO método para mostrar el dato
+            int puntos = calcularPuntosVisuales(u);
+            int numJugadores = 11; // Dato visual fijo
 
             tableModel.addRow(new Object[]{
                     pos++,
                     u.getNombre(),
-                    puntosFake, // Usamos el dato seguro
-                    numJugadoresFake + " Jugadores"
+                    puntos, 
+                    numJugadores + " Jugadores"
             });
         }
     }
@@ -269,5 +271,11 @@ public class PanelClasificacion extends JPanel {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "Error al guardar.", "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+    
+    private int calcularPuntosVisuales(Usuario u) {
+        // Centralizamos la fórmula aquí para que el orden y el número coincidan siempre.
+        // Usamos Math.abs para evitar negativos y aseguramos consistencia.
+        return (Math.abs(u.hashCode()) % 150) + (obtenerJornadaActual() * 5);
     }
 }
